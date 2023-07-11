@@ -11,4 +11,4 @@ import './styles/app.css';
 // start the Stimulus application
 import './bootstrap';
 
-console.log("LOLOLOLOLOLOLOLOLOLOLOLOL")
+console.log("Bonjour")
