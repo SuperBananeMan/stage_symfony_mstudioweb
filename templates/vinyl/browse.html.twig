@@ -6,6 +6,11 @@
 
     <h2 class="mt-5 mb-4">Filter by Genre</h2>
     <ul class="genre-list ps-0 mt-2 mb-3">
+		<li class="d-inline">
+            <a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
+                slug: ''
+            }) }}">Any Genres</a>
+        </li>
         <li class="d-inline">
             <a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
                 slug: 'pop'
@@ -16,10 +21,15 @@
                 slug: 'rock'
             }) }}">Rock</a>
         </li>
-        <li class="d-inline">
+		<li class="d-inline">
             <a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
-                slug: 'all-accordion'
-            }) }}">All Accordion</a>
+                slug: 'metal'
+            }) }}">Metal</a>
+        </li>
+		<li class="d-inline">
+            <a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
+                slug: 'rap'
+            }) }}">Rap</a>
         </li>
     </ul>
 
@@ -27,15 +37,45 @@
         <h2 class="mt-5">Mixes</h2>
         <div class="row">
             {% for mix in mixes %}
-            <div class="col col-md-4">
-                <div class="mixed-vinyl-container p-3 text-center">
-                    <img src="/dogo.png" data-src="dogo" alt="dogo">
-                    <p class="mt-2"><strong>{{ mix.title }}</strong></p>
-                    <span>{{ mix.genre }}</span>
-                    |
-                    <span>{{ mix.createdAt|ago }}</span>
-                </div>
-            </div>
+				{% if genre == '' %}
+					<div class="col col-md-4">
+						<div class="mixed-vinyl-container p-3 text-center">
+							<a href="{{ path('app_mix_show', {
+								id: mix.id
+							}) }}">
+								<img src="{{ mix.getImageUrl(300) }}" alt="Mix album cover">
+								<p class="mt-2"><strong>{{ mix.title }}</strong></p>
+								<span>{{ mix.trackCount }} Tracks</span>
+								|
+								<span style="text-transform:capitalize;">{{ mix.genre }}</span>
+								|
+								<span>{{ mix.createdAt|ago }}</span>
+								<br>
+								{{ mix.votesString }} votes
+							</a>
+						</div>
+					</div>
+				{% else %}
+					{% if genre == mix.genre %}
+						<div class="col col-md-4">
+							<div class="mixed-vinyl-container p-3 text-center">
+								<a href="{{ path('app_mix_show', {
+									id: mix.id
+								}) }}">
+									<img src="{{ mix.getImageUrl(300) }}" alt="Mix album cover">
+									<p class="mt-2"><strong>{{ mix.title }}</strong></p>
+									<span>{{ mix.trackCount }} Tracks</span>
+									|
+									<span style="text-transform:capitalize;">{{ mix.genre }}</span>
+									|
+									<span>{{ mix.createdAt|ago }}</span>
+									<br>
+									{{ mix.votesString }} votes
+								</a>
+							</div>
+						</div>
+					{% endif %}
+				{% endif %}
             {% endfor %}
         </div>
     </div>

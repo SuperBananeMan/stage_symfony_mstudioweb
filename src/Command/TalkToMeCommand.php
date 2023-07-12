@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use App\Repository\VinylMixRepository;
 
 #[AsCommand(
     name: 'app:talk-to-me',
@@ -16,6 +17,13 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class TalkToMeCommand extends Command
 {
+	public function __construct(
+        private VinylMixRepository $mixRepository
+    )
+    {
+        parent::__construct();
+    }
+	
     protected function configure(): void
     {
         $this
