@@ -1,0 +1,9 @@
+App\Entity\Compte:
+    properties:
+        username:
+            - NotBlank: ~
+        email:
+            - Email:
+                message: The email "{{ value }}" is not a valid email.
+        password:
+            - NotBlank: ~

@@ -2,19 +2,17 @@
 
 namespace App\Controller;
 
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Pagerfanta;
 use App\Repository\VinylMixRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use function Symfony\Component\String\u;
 
 class VinylController extends AbstractController
 {
-    public function __construct(
-        private bool $isDebug
-    )
-    {}
-
     #[Route('/', name: 'app_homepage')]
     public function homepage(): Response
     {
@@ -30,19 +28,6 @@ class VinylController extends AbstractController
         return $this->render('vinyl/homepage.html.twig', [
             'title' => 'PB & Jams',
             'tracks' => $tracks,
-        ]);
-    }
-
-    #[Route('/browse/{slug}', name: 'app_browse')]
-    public function browse(VinylMixRepository $mixRepository, string $slug = null): Response
-    {
-        $genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
-
-        $mixes = $mixRepository->findAllOrderedByVotes();
-		
-        return $this->render('vinyl/browse.html.twig', [
-            'genre' => $slug,
-            'mixes' => $mixes,
         ]);
     }
 }

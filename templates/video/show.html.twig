@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ video.nom }}{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <h1 class="d-inline me-3">{{ video.nom }}</h1>
+        <div class="row mt-5">
+            <div class="col-12 col-md-4">
+                {{ include('video/_recordSvg.html.twig') }}
+            </div>
+            <div class="col-12 col-md-8 ps-5">
+				<h2 class="d-inline me-3">{{ video.title }}</h2>
+                <p>{{ video.description }}</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

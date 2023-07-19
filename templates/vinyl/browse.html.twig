@@ -13,71 +13,40 @@
         </li>
         <li class="d-inline">
             <a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
-                slug: 'pop'
-            }) }}">Pop</a>
+                slug: 'meme'
+            }) }}">Meme</a>
         </li>
         <li class="d-inline">
             <a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
-                slug: 'rock'
-            }) }}">Rock</a>
-        </li>
-		<li class="d-inline">
-            <a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
-                slug: 'metal'
-            }) }}">Metal</a>
-        </li>
-		<li class="d-inline">
-            <a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
-                slug: 'rap'
-            }) }}">Rap</a>
+                slug: 'music'
+            }) }}">Music</a>
         </li>
     </ul>
 
     <div>
-        <h2 class="mt-5">Mixes</h2>
-        <div class="row">
-            {% for mix in mixes %}
-				{% if genre == '' %}
+        <h2 class="mt-5">Videos</h2>
+		<turbo-frame target="_top" id="video-browse-list-{{ pager.currentPage }}">
+			<div class="row">
+				{% for video in pager %}
 					<div class="col col-md-4">
 						<div class="mixed-vinyl-container p-3 text-center">
-							<a href="{{ path('app_mix_show', {
-								slug: mix.slug
+							<a href="{{ path('app_video_show', {
+								slug: video.slug
 							}) }}">
-								<img src="{{ mix.getImageUrl(300) }}" alt="Mix album cover">
-								<p class="mt-2"><strong>{{ mix.title }}</strong></p>
-								<span>{{ mix.trackCount }} Tracks</span>
-								|
-								<span style="text-transform:capitalize;">{{ mix.genre }}</span>
-								|
-								<span>{{ mix.createdAt|ago }}</span>
+								<p class="mt-2"><strong>{{ video.nom }}</strong></p>
+								<span style="text-transform:capitalize;">{{ video.genre }}</span>
 								<br>
-								{{ mix.votesString }} votes
+								<span>{{ video.createdAt|ago }}</span>
 							</a>
 						</div>
 					</div>
-				{% else %}
-					{% if genre == mix.genre %}
-						<div class="col col-md-4">
-							<div class="mixed-vinyl-container p-3 text-center">
-								<a href="{{ path('app_mix_show', {
-									slug: mix.slug
-								}) }}">
-									<img src="{{ mix.getImageUrl(300) }}" alt="Mix album cover">
-									<p class="mt-2"><strong>{{ mix.title }}</strong></p>
-									<span>{{ mix.trackCount }} Tracks</span>
-									|
-									<span style="text-transform:capitalize;">{{ mix.genre }}</span>
-									|
-									<span>{{ mix.createdAt|ago }}</span>
-									<br>
-									{{ mix.votesString }} votes
-								</a>
-							</div>
-						</div>
-					{% endif %}
-				{% endif %}
-            {% endfor %}
-        </div>
+				{% endfor %}
+				
+				{% if pager.hasNextPage %}
+                    <turbo-frame id="video-browse-list-{{ pager.nextPage }}" src="{{ pagerfanta_page_url(pager, pager.nextPage) }}" loading="lazy"></turbo-frame>
+                {% endif %}
+			</div>
+		</turbo-frame>
     </div>
 </div>
 {% endblock %}

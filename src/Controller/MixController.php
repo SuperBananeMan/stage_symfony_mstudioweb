@@ -16,14 +16,14 @@ class MixController extends AbstractController
     public function new(EntityManagerInterface $entityManager): Response
     {
         $mix = new VinylMix();
-		$titles = ['Do you Remember... Phil Collins?!','I like trains','Professionals have standarts.'];
+		$titles = ['Ze healing is not as revarding as ze hurting.','Think fast chucklenuts','I like trains','Professionals have standarts.'];
         $mix->setTitle($titles[array_rand($titles)]);
-		$descriptions = ['A pure mix of drummers turned singers!','I have no idea','Hi this is Patrick',"The engineer's a bloody sentry ! OHOHOHOHOHOHOH !"];
+		$descriptions = ['I will hurt, maybe.','I have no idea','Hi this is Patrick',"The engineer's a bloody sentry ! OHOHOHOHOHOHOH !"];
         $mix->setDescription($descriptions[array_rand($descriptions)]);
         $genres = ['pop','rock','metal','rap'];
 		$mix->setGenre($genres[array_rand($genres)]);
-        $mix->setTrackCount(rand(5, 20));
-        $mix->setVotes(rand(-50, 50));
+        $mix->setTrackCount(rand(5, 25));
+        $mix->setVotes(rand(0, 100));
 
         $entityManager->persist($mix);
         $entityManager->flush();
