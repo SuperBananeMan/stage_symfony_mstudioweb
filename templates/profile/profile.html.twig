@@ -4,17 +4,46 @@
 <div class="container">
 	<div class="row">
 		<div class="col-md-4">
-			<div class="fas fa-user-astronaut p-5" style="border: solid 3px #fff; border-radius: 100px; font-size: 300px;"></div>
+			{% if pfp == '' %}
+				<div type="button" class="fas fa-user-astronaut p-5 zonehoverprofile" style="border: solid 3px #fff; border-radius: 100px; font-size: 300px;" data-bs-toggle="modal" data-bs-target="#popup"></div>
+			{% else %}
+				<div type="button" class="zonehoverprofile" style="border-radius: 50px;" data-bs-toggle="modal" data-bs-target="#popup">
+					<img src="/pfp/{{ pfp }}" alt="Your profile picture." style="border-radius:50px;max-width:416px;">
+				</div>
+			{% endif %}
+			<div id="popup" class="modal">
+				<div class="modal-dialog modal-dialog-centered">
+					<div class="modal-content" style="background-color:#17242C;border:solid 5px #fff;border-radius: 10px;">
+						{% if pfp == '' %}
+							<div class="fas fa-user-astronaut p-5" style="border: solid 3px #fff; border-radius: 10px; font-size: 300px;"></div>
+						{% else %}
+							<img src="/pfp/{{ pfp }}" alt="Your profile picture." style="border-radius:10px;max-width:100%;">
+						{% endif %}
+						<a class="btn btn-primary" href="{{ path('app_pfp_change') }}"">Change your profile picture</a>
+					</div>
+				</div>
+			</div>
 		</div>
+<script type="text/javascript">
+imgInp.onchange = evt => {
+  const [file] = imgInp.files
+  if (file) {
+    blah.src = URL.createObjectURL(file)
+  }
+}
+</script>
+<style>
+input[type="file"] {
+	font-size: 17px;
+	color: #b8b8b8;
+}
+</style>
 		<div class="col-md-8">
 			<div>
-				<h1>Bonjour {{ username ? username : 'personne anonyme' }}.</h1>
+				<h1>Bonjour {{ username ? username : 'anonymous user' }}.</h1>
 				<br>
 				
-				{% if connectee == 'true' %}
-					<h3>Bienvenue sur votre profil {{ username }}</h3>
-					<h4>Ton email actuel est {{ email }}</h4>
-				{% elseif username == null %}
+				{% if username == null %}
 					<h2>Pour accéder à plus de fonctionnalités, veuillez vous connecter.</h2>
 					<div class="row">
 						<div class="col-md-6">
@@ -24,9 +53,18 @@
 							<a class="btn btn-secondary btn-sm" href="{{ path('app_prof_connect', {etat: 'connection'}) }}" style="border-radius:50px; font-size:30px;">Connection</a>
 						</div>
 					</div>
+				{% elseif connectee == 'true' %}
+					<h2>{{ email }}</h2>
+					<h4>Montrer ses vidéos et commentaires</h4>
 				{%endif %}
 			</div>
 		</div>
+		<div class="row">
+			{% if connectee == 'true' %}
+				<a class="btn btn-secondary" href="{{ path('app_prof_deconnect') }}" style="width:150px;margin-top:25px;margin-left:10px;">Se déconnecter</a>
+			{%endif %}
+		</div>
+		{{ dump(app.user) }}
 	</div>
 </div>
 {% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container">
+	<div class="row">
+		<div class="col-md-4">
+			<h3>Old profile picture</h3>
+			{% if pfp == '' %}
+				<div class="fas fa-user-astronaut p-5" style="border: solid 3px #fff; border-radius: 100px; font-size: 300px;" data-bs-toggle="modal" data-bs-target="#popup"></div>
+			{% else %}
+				<div style="border-radius: 50px;" data-bs-toggle="modal" data-bs-target="#popup">
+					<img src="/pfp/{{ pfp }}" alt="Your profile picture." style="border-radius:50px;max-width:100%;">
+				</div>
+			{% endif %}
+		</div>
+<style>
+input[type="file"] {
+	font-size: 17px;
+	color: #b8b8b8;
+}
+</style>
+		<div class="col-md-4">
+			<div class="modal-header">
+				<h2>Your profile picture | Change your profile picture</h2>
+			</div>
+			<div class="modal-body">
+				<p>Change you profile picture here :</p>
+				<label>Your Image File
+					<div>
+						{{ form(formpfp) }}
+					</div>
+				</label>
+			</div>
+			<!-- <div class="modal-footer"> -->
+			<!-- </div> -->
+		</div>
+		
+		<div class="col-md-4">
+			<div>
+				<h3>New profile picture</h3>
+				<div style="border-radius: 50px;" data-bs-toggle="modal" data-bs-target="#popup">
+					<img alt="Your new profile picture." style="border-radius:50px;max-width:100%;" id="output">
+				</div>
+			</div>
+<script>
+var loadFile = function(event) {
+	var image = document.getElementById('output');
+	image.src = URL.createObjectURL(event.target.files[0]);
+};
+</script>
+		</div>
+	</div>
+</div>
+{% endblock %}

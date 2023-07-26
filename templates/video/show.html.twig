@@ -1,18 +1,75 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ video.nom }}{% endblock %}
+{% block title %}{{ video.nom }} | VideoTube{% endblock %}
 
 {% block body %}
     <div class="container">
         <h1 class="d-inline me-3">{{ video.nom }}</h1>
         <div class="row mt-5">
-            <div class="col-12 col-md-4">
-                {{ include('video/_recordSvg.html.twig') }}
+			<div class="col-12 col-md-12">
+				<link rel="stylesheet" href="/build/videoplayer.css" />
+				<figure id="videoContainer" data-fullscreen="false">
+					<video id="video" class="video-js vjs-theme-city" width="800" height="500" controls preload="metadata">
+						<source src="/vid/{{ video.videoName }}" type="video/mp4">
+						<source src="/vid/{{ video.videoName }}" type="video/webm">
+						<source src="/vid/{{ video.videoName }}" type="video/ogg">
+						Problème vidéo.
+						<object type="application/x-shockwave-flash" data="flash-player.swf?videoUrl=/vid/{{ video.videoName }}" width="1024" height="576">
+							<param name="movie" value="flash-player.swf?videoUrl=/vid/{{ video.videoName }}" />
+							<param name="allowfullscreen" value="true" />
+							<param name="wmode" value="transparent" />
+							<param name="flashvars" value="controlbar=over&amp;image=/vid/thumbnail/{{ video.getThumbnail() }}&amp;file=flash-player.swf?/vid/{{ video.videoName }}" />
+							<img alt="Tears of Steel poster image" src="/vid/thumbnail/{{ video.getThumbnail() }}" width="1024" height="428" title="No video playback possible, please download the video from the link below" />
+						</object>
+					</video>
+					<div id="video-controls" class="controls" data-state="hidden">
+						<button id="playpause" type="button" data-state="play"></button>
+						<button id="stop" type="button" data-state="stop"></button>
+						<div class="progress">
+						<progress id="progress" value="0" min="0">
+							<span id="progress-bar"></span>
+						</progress>
+						</div>
+						<button id="mute" type="button" data-state="mute"></button>
+						<button id="volinc" type="button" data-state="volup"></button>
+						<button id="voldec" type="button" data-state="voldown"></button>
+						<button id="fs" type="button" data-state="go-fullscreen"></button>
+					</div>
+				</figure>
+				<script src="/build/videoplayer.js"></script>
             </div>
-            <div class="col-12 col-md-8 ps-5">
-				<h2 class="d-inline me-3">{{ video.title }}</h2>
+            <div class="col-md-12" style="margin-top:10px;">
                 <p>{{ video.description }}</p>
             </div>
+			<div class="col-md-12" style="margin-top:20px;">
+				{% if formcom != 'undefined' %}
+					{{ form(formcom) }}
+				{% endif %}
+				{% for comment in pager %}
+					<div class="row" style="margin-bottom:25px;">
+						<div class="col col-md-1" style="text-align:center;">
+							<a href="/">
+								{% if numbers[loop.index0] == '' %}
+									<i class="fas fa-user-astronaut p-2" style="color:grey;border: solid 2px grey; border-radius: 50px; font-size: 50px;"></i>
+								{% else %}
+									<img src="/pfp/{{ numbers[loop.index0] }}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;">
+								{% endif %}
+								<br>
+								<strong>{{ comment.userNameComment }}</strong>
+							</a>
+						</div>
+						<div class="col col-md-11">
+							<div class="mixed-vinyl-container">
+								<p class="mt-2"><strong>{{ comment.contentComment }}</strong><br><span>{{ comment.createdAt|ago }}</span></p>
+							</div>
+						</div>
+					</div>
+				{% endfor %}
+				
+				{#{% if pager.hasNextPage %}
+                    <turbo-frame id="video-browse-list-{{ pager.nextPage }}" src="{{ pagerfanta_page_url(pager, pager.nextPage) }}" loading="lazy"></turbo-frame>
+                {% endif %}#}
+			</div>
         </div>
     </div>
 {% endblock %}

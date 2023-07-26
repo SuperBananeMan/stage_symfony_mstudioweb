@@ -2,6 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
+use App\Repository\UserRepository;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
 use App\Repository\VinylMixRepository;
@@ -14,20 +17,12 @@ use function Symfony\Component\String\u;
 class VinylController extends AbstractController
 {
     #[Route('/', name: 'app_homepage')]
-    public function homepage(): Response
+    public function homepage(SessionInterface $session, UserRepository $repository): Response
     {
-        $tracks = [
-            ['song' => 'Gangsta\'s Paradise', 'artist' => 'Coolio'],
-            ['song' => 'Waterfalls', 'artist' => 'TLC'],
-            ['song' => 'Creep', 'artist' => 'Radiohead'],
-            ['song' => 'Kiss from a Rose', 'artist' => 'Seal'],
-            ['song' => 'On Bended Knee', 'artist' => 'Boyz II Men'],
-            ['song' => 'Fantasy', 'artist' => 'Mariah Carey'],
-        ];
-
+		$image = $session->get('pfp');
         return $this->render('vinyl/homepage.html.twig', [
-            'title' => 'PB & Jams',
-            'tracks' => $tracks,
+			'image' => $image,
+            'title' => 'VideoTube',
         ]);
     }
 }

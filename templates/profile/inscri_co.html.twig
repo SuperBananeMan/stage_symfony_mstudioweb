@@ -15,7 +15,7 @@
 					{% endif %}
 				{% elseif etat == 'connection' %}
 					<h2>Se connecter</h2>
-					{% if error %}
+					{% if error == 'erreur' %}
 						<!-- <div style="color:red;">{# {{ error.messageKey|trans(error.messageData, 'security') }} #}</div> -->
 						<div class="alert alert-danger alert-dismissible fade show" role="alert">
 					    <strong>Erreur</strong> : Identifiant ou mot de passe incorrect.
@@ -23,37 +23,7 @@
 					    </div>
 						<!-- add timer & close -->
 					{% endif %}
-					<!-- <form action="{{ path('app_prof_connect') }}" method="post"> -->
-						<!-- <label for="username">Email:</label> -->
-						<!-- <input type="text" id="username" name="_username" value="{#{{ username }}#}"> -->
-
-						<!-- <label for="password">Password:</label> -->
-						<!-- <input type="password" id="password" name="_password"> -->
-
-						{# If you want to control the URL the user is redirected to on success
-						<input type="hidden" name="_target_path" value="/account"> #}
-
-						<!-- <button type="submit">login</button> -->
-					<!-- </form> -->
-					<form name="compte" action="{{ path('app_prof_connect') }}" method="post">
-						<div id="compte">
-							<div class="mb-3">
-								<label for="username" class="form-label required">Username</label>
-								<input type="text" id="username" name="_username" required="required" class="form-control" value="{{ username }}" />
-							</div>
-							<!-- <div class="mb-3"> -->
-								<!-- <label for="compte_email" class="form-label required">Email</label> -->
-								<!-- <input type="text" id="compte_email" name="compte[email]" required="required" class="form-control" value="Your Email." /> -->
-							<!-- </div> -->
-							<div class="mb-3">
-								<label for="password" class="form-label required">Password</label>
-								<input type="password" id="password" name="_password" required="required" class="form-control"/>
-							</div>
-							<div class="mb-3">
-								<button type="submit" class="btn-primary btn">Save</button>
-							</div>
-						</div>
-					</form>
+					{{ form(form2) }}
 				{%endif %}
 			</div>
 		</div>

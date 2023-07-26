@@ -6,6 +6,7 @@ use App\Entity\Videos;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * @extends ServiceEntityRepository<Videos>
@@ -44,13 +45,19 @@ class VideosRepository extends ServiceEntityRepository
      * @return VinylMix[] Returns an array of VinylMix objects
      */
 	 
-    public function createOrderedByQueryBuilder(string $genre = null)
+    public function createOrderedByQueryBuilder($session, string $genre = null, int $video = null)
     {
         $queryBuilder = $this->addOrderByQueryBuilder();
         if ($genre) {
-            $queryBuilder->andWhere('mix.genre = :genre')
-                ->setParameter('genre', $genre);
-        }
+			if ($genre == strval($session->get('id')[0]['id'])){
+				$queryBuilder->andWhere('mix.uploader = :genre')
+					->setParameter('genre', $genre);
+			}
+			else{
+				$queryBuilder->andWhere('mix.genre = :genre')
+					->setParameter('genre', $genre);
+			}
+		}
 		return $queryBuilder;
     }
 	

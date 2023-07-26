@@ -2,37 +2,52 @@
 
 {% block body %}
 <div class="container">
-    <h1>Browse {{ genre ? genre : 'All Genres' }}</h1>
+	{% if me == true %}
+		<h1>Your videos.</h1>
+	{% endif %}
+	{% if genre == minestring %}
+		<h1>My videos</h1>
+	{% else %}
+		<h1>Browse {{ genre ? genre : 'All Genres' }}</h1>
+	{% endif %}
 
     <h2 class="mt-5 mb-4">Filter by Genre</h2>
     <ul class="genre-list ps-0 mt-2 mb-3">
 		<li class="d-inline">
-            <a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
-                slug: ''
-            }) }}">Any Genres</a>
+			<a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
+				slug: mine
+			}) }}">My videos</a>
+		</li>
+		<li class="d-inline">
+			<a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
+				slug: ''
+			}) }}">Any Genres</a>
+		</li>
+        <li class="d-inline">
+			<a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
+				slug: 'meme'
+			}) }}">Meme</a>
         </li>
         <li class="d-inline">
-            <a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
-                slug: 'meme'
-            }) }}">Meme</a>
-        </li>
-        <li class="d-inline">
-            <a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
-                slug: 'music'
-            }) }}">Music</a>
+			<a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
+				slug: 'music'
+			}) }}">Music</a>
         </li>
     </ul>
 
     <div>
-        <h2 class="mt-5">Videos</h2>
+		{% if genre == minestring %}
+			<h2 class="mt-5">My videos</h2>
+		{% else %}
+			<h2 class="mt-5">{{ genre ? genre : 'All videos' }}</h2>
+		{% endif %}
 		<turbo-frame target="_top" id="video-browse-list-{{ pager.currentPage }}">
 			<div class="row">
 				{% for video in pager %}
 					<div class="col col-md-4">
 						<div class="mixed-vinyl-container p-3 text-center">
-							<a href="{{ path('app_video_show', {
-								slug: video.slug
-							}) }}">
+							<a href="{{ path('app_video_show', {slug: video.slug}) }}">
+								<img src="/vid/thumbnail/{{ video.getThumbnail() }}" alt="video album cover" style="background-color:black;width:384px;height:192px;object-fit:scale-down;">
 								<p class="mt-2"><strong>{{ video.nom }}</strong></p>
 								<span style="text-transform:capitalize;">{{ video.genre }}</span>
 								<br>

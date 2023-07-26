@@ -2,13 +2,17 @@
 
 namespace App\Entity;
 
+use Symfony\Component\HttpFoundation\File\File;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use Gedmo\Mapping\Annotation\Slug;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use App\Repository\VideosRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: VideosRepository::class)]
+#[Vich\Uploadable]
 class Videos
 {
 	use TimestampableEntity;
@@ -30,12 +34,38 @@ class Videos
 	#[ORM\Column(length: 255)]
     private ?string $genre = null;
 	
+	#[ORM\Column(length: 255)]
+    private ?string $thumbnail = null;
+	
     #[ORM\Column(type: Types::TIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $duree = null;
 	
 	#[ORM\Column(length: 150, unique: true)]
 	#[Slug(fields: ['title'])]
     private ?string $slug = null;
+	
+	#[Assert\File(
+        maxSize: '1000m',
+        extensions: [
+			'mp4',
+			'mp3',
+			'mov',
+			'webm'
+		],
+        extensionsMessage: 'Please upload a valid video or mp3 file.',
+    )]
+	// NOTE: This is not a mapped field of entity metadata, just a simple property.
+    #[Vich\UploadableField(mapping: 'videos', fileNameProperty: 'videoName', size: 'videoSize')]
+    private ?File $videoFile = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?string $videoName = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $videoSize = null;
+	
+	#[ORM\Column(length: 255)]
+    private ?int $uploader = null;
 	
 	public function __construct()
     {
@@ -94,6 +124,18 @@ class Videos
 
         return $this;
     }
+	
+	public function getThumbnail(): ?string
+    {
+        return $this->thumbnail;
+    }
+
+    public function setThumbnail(string $thumbnail): static
+    {
+        $this->thumbnail = $thumbnail;
+
+        return $this;
+    }
 
     public function getDuree(): ?\DateTimeInterface
     {
@@ -117,5 +159,60 @@ class Videos
         $this->slug = $slug;
 
         return $this;
+    }
+	
+	/**
+     * If manually uploading a file (i.e. not using Symfony Form) ensure an instance
+     * of 'UploadedFile' is injected into this setter to trigger the update. If this
+     * bundle's configuration parameter 'inject_on_load' is set to 'true' this setter
+     * must be able to accept an instance of 'File' as the bundle will inject one here
+     * during Doctrine hydration.
+     *
+     * @param File|\Symfony\Component\HttpFoundation\File\UploadedFile|null $videoFile
+     */
+    public function setVideoFile(?File $videoFile = null): void
+    {
+        $this->videoFile = $videoFile;
+
+        if (null !== $videoFile) {
+            // It is required that at least one field changes if you are using doctrine
+            // otherwise the event listeners won't be called and the file is lost
+            $this->updatedAt = new \DateTimeImmutable();
+        }
+    }
+
+    public function getVideoFile(): ?File
+    {
+        return $this->videoFile;
+    }
+
+    public function setVideoName(?string $videoName): void
+    {
+        $this->videoName = $videoName;
+    }
+
+    public function getVideoName(): ?string
+    {
+        return $this->videoName;
+    }
+
+    public function setVideoSize(?int $videoSize): void
+    {
+        $this->videoSize = $videoSize;
+    }
+
+    public function getVideoSize(): ?int
+    {
+        return $this->videoSize;
+    }
+	
+	public function setUploader(?int $uploader): void
+    {
+        $this->uploader = $uploader;
+    }
+
+    public function getUploader(): ?int
+    {
+        return $this->uploader;
     }
 }

@@ -1,0 +1,104 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ video.nom }} | VideoTube{% endblock %}
+
+{% block body %}
+<script>
+var videoId = 'video';
+var scaleFactor = null;
+var snapshots = [];
+
+/**
+ * Captures a image frame from the provided video element.
+ *
+ * @param {Video} video HTML5 video element from where the image frame will be captured.
+ * @param {Number} scaleFactor Factor to scale the canvas element that will be return. This is an optional parameter.
+ *
+ * @return {Canvas}
+ */
+function capture(video, scaleFactor) {
+	if(scaleFactor == null){
+		scaleFactor = 1.5;
+	}
+	var w = video.videoWidth * scaleFactor;
+	var h = video.videoHeight * scaleFactor;
+	var canvas = document.createElement('canvas');
+		canvas.width  = w;
+	    canvas.height = h;
+		canvas.id = "adown";
+	var ctx = canvas.getContext('2d');
+		ctx.drawImage(video, 0, 0, w, h);
+    return canvas;
+} 
+
+/**
+ * Invokes the <code>capture</code> function and attaches the canvas element to the DOM.
+ */
+function shoot(){
+	var video  = document.getElementById(videoId);
+	var output = document.getElementById('output');
+	var canvas = capture(video, scaleFactor);
+		canvas.onclick = function(){
+			window.open(this.toDataURL());
+		};
+	snapshots.unshift(canvas);
+	output.innerHTML = '';
+	for(var i=0; i<1; i++){
+		output.appendChild(snapshots[i]);
+	}
+	
+	var videoRating = document.querySelector('.js-video-rating');
+    var videoNom = JSON.parse(videoRating.dataset.video);
+	
+	console.log(videoNom);
+	
+	var a = document.createElement('a');
+	a.href = `${videoNom}.png`;
+	a.download = `${videoNom}.png`;
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+	
+	/*var videoRating = document.querySelector('.js-video-rating');
+    var videoNom = JSON.parse(videoRating.dataset.video);
+	
+	var download = document.createElement("a");
+		download.id = "";
+		download.style = "width:150px;height:50px;";
+		download.href = "http://127.0.0.1:8000/video/new";
+		download.download = `${videoNom}.png`;
+		download.textContent = "Prendre cette miniature.";
+	var saut = document.createElement("br");
+	output.appendChild(saut);
+	output.appendChild(download);*/
+}
+</script>
+    <div class="container">
+        <h1 class="d-inline me-3" id="videoNom">{{ video.nom }}</h1>
+        <div class="row mt-5">
+            <div class="col-12 col-md-12">
+                <video id="video" class="video-js vjs-theme-city" width="800" height="500" autoplay controls>
+					<source src="/vid/{{ video.videoName }}" type="video/mp4">
+					<source src="/vid/{{ video.videoName }}" type="video/webm">
+					<source src="/vid/{{ video.videoName }}" type="video/ogg">
+					Problème vidéo.
+				</video>
+            </div>
+			
+			<div class="js-video-rating"
+				data-video="{{ video.nom|serialize(format = 'json') }}"
+			>
+			
+			<h1>For the thumbnail, you can : </h1>
+            <div class="col-md-6" style="margin-top:10px;">
+				<h3>Upload a file...</h3>
+				
+            </div>
+			<div class="col-md-6" style="margin-top:10px;">
+				<h3>or click the capture button to have an image of the time of the video.</h3>
+				<button id="btnDirect" onclick="shoot()" class="btn btn-primary" style="width:100px;height:50px;margin-bottom:20px;">Capture</button>
+            </div>
+			<div id="output"></div>
+        </div>
+    </div>
+{% endblock %}

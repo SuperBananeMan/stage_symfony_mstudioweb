@@ -1,4 +1,4 @@
-App\Entity\Compte:
+App\Entity\User:
     properties:
         username:
             - NotBlank: ~
@@ -7,3 +7,13 @@ App\Entity\Compte:
                 message: The email "{{ value }}" is not a valid email.
         password:
             - NotBlank: ~
+App\Entity\Video:
+    properties:
+        nom:
+            -NotBlank: ~
+        title:
+            -NotBlank: ~
+        description:
+            -NotBlank: ~
+        genre:
+            -NotBlank: ~
