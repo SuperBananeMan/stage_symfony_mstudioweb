@@ -2,8 +2,8 @@
 
 namespace App\Controller;
 
-use App\Form\Type\UserType;
 use App\Entity\User;
+use App\Form\UserType;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Vich\UploaderBundle\Form\Type\VichFileType;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -19,12 +19,19 @@ use Symfony\Component\HttpFoundation\Response;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class RegistrationController extends AbstractController
 {
     #[Route('/register', name: 'app_prof_sign')]
-	public function new(SessionInterface $session, Request $request, EntityManagerInterface $entityManager, /*UserPasswordHasherInterface $passwordHasher*/): Response
+	public function new(SessionInterface $session, Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher, AuthenticationUtils $authenticationUtils): Response
     {
+		// get the login error if there is one
+		$error = '';
+
+		// last username entered by the user
+		$lastUsername = $authenticationUtils->getLastUsername();
+		
         // creates a user object and initializes some data for this example
         $user = new User();
 		
@@ -56,9 +63,12 @@ class RegistrationController extends AbstractController
 				'connectee' => true
 			]);
 		}
+		
 		return $this->render('profile/inscri_co.html.twig', [
+			'last_username' => $lastUsername,
+			'error' => $error,
 			'image' => "",
-			'form' => $form,
+			'form' => $form->createView(),
 			'etat' => 'inscription',
 			'connectee' => false
 		]);
@@ -74,16 +84,9 @@ class RegistrationController extends AbstractController
 		else{
 			$connectee = false;
 		}
-		$email = $session->get('email');
-		$password = $session->get('password');
-		$pfp = $session->get('pfp');
-		$image = $session->get('pfp');
+		
 		return $this->render('profile/profile.html.twig', [
-			'image' => $image,
-			'username' => $username,
-			'email' => $email,
-			'password' => $password,
-			'pfp' => $pfp,
+			'username' => '',
 			'etat' => 'connectee',
 			'connectee' => $connectee
 		]);
@@ -113,9 +116,9 @@ class RegistrationController extends AbstractController
 			$email = $session->get('email');
 			$password = $session->get('password');
 			$pfp = $session->get('pfp');
-			$image = $session->get('pfp');
+			
 			return $this->redirectToRoute('app_prof_show', [
-				'image' => $image,
+				
 				'formpfp' => $formpfp,
 				'username' => $username,
 				'email' => $email,
@@ -132,9 +135,9 @@ class RegistrationController extends AbstractController
 		$email = $session->get('email');
 		$password = $session->get('password');
 		$pfp = $session->get('pfp');
-		$image = $session->get('pfp');
+		
 		return $this->render('profile/pfpchange.html.twig', [
-			'image' => $image,
+			
 			'formpfp' => $formpfp,
 			'username' => $username,
 			'email' => $email,

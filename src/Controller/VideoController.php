@@ -57,13 +57,8 @@ class VideoController extends AbstractController
 			$me = false;
 		}
 		
-		$image = $session->get('pfp');
-		
         return $this->render('vinyl/browse.html.twig', [
-			'image' => $image,
 			'me' => $me,
-			'minestring' => strval($session->get('id')[0]['id']),
-			'mine' => $session->get('id')[0]['id'],
 			'genre' => $genre,
             'pager' => $pagerfanta,
         ]);
@@ -81,9 +76,9 @@ class VideoController extends AbstractController
 		$video->setVideoName('');
 		$video->setVideoSize(0);
 		
-		$up = $session->get('username');
-		$up = $repository->findOneBy(['username' => $up]);
-		$video->setUploader($up->getId());
+		// $up = $session->get('username');
+		// $up = $repository->findOneBy(['username' => $up]);
+		$video->setUploader(3);//$up->getId()
 
         $form = $this->createForm(VideoType::class, $video);
 		
@@ -100,19 +95,15 @@ class VideoController extends AbstractController
 			$entityManager->persist($video);
 			$entityManager->flush();
 			
-			$image = $session->get('pfp');
+			
 			
 			return $this->redirectToRoute('app_video_new', [
-				'image' => $image,
 				'video' => $video,
 				'slug' => $video->getSlug(),
 			]);
 		}
 		
-		$image = $session->get('pfp');
-		
 		return $this->render('video/videoaddForm.html.twig', [
-			'image' => $image,
 			'form2' => $form,
 		]);
 	}
@@ -120,9 +111,8 @@ class VideoController extends AbstractController
     #[Route('/video/new/{slug}', name: 'app_video_new')]
     public function newshow(SessionInterface $session, Videos $video): Response
     {
-		$image = $session->get('pfp');
+		
 		return $this->render('video/videoadd.html.twig', [
-			'image' => $image,
 			'video' => $video,
 		]);
     }
@@ -157,10 +147,10 @@ class VideoController extends AbstractController
 			$comment = new Comments();
 			$formcom = $this->createForm(CommentType::class, $comment);
 			
-			$image = $session->get('pfp');
+			
 			
 			return $this->redirectToRoute('app_video_show', [
-				'image' => $image,
+				
 				'slug' => $video->getSlug(),
 				'formcom' => $formcom,
 				'video' => $video,
@@ -181,10 +171,10 @@ class VideoController extends AbstractController
 			$numbers[] = $repository->find($comms->getUploaderComment())->getPfpName();
 		}
 		
-		$image = $session->get('pfp');
+		
 
         return $this->render('video/show.html.twig', [
-			'image' => $image,
+			
 			'numbers' => $numbers,
 			'formcom' => $formcom,
 			'video' => $video,

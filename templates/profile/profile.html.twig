@@ -4,21 +4,15 @@
 <div class="container">
 	<div class="row">
 		<div class="col-md-4">
-			{% if pfp == '' %}
-				<div type="button" class="fas fa-user-astronaut p-5 zonehoverprofile" style="border: solid 3px #fff; border-radius: 100px; font-size: 300px;" data-bs-toggle="modal" data-bs-target="#popup"></div>
-			{% else %}
-				<div type="button" class="zonehoverprofile" style="border-radius: 50px;" data-bs-toggle="modal" data-bs-target="#popup">
-					<img src="/pfp/{{ pfp }}" alt="Your profile picture." style="border-radius:50px;max-width:416px;">
-				</div>
-			{% endif %}
+			<div type="button" class="fas fa-user-astronaut p-5 zonehoverprofile" style="border: solid 3px #fff; border-radius: 100px; font-size: 300px;" data-bs-toggle="modal" data-bs-target="#popup"></div>
+				<!-- <div type="button" class="zonehoverprofile" style="border-radius: 50px;" data-bs-toggle="modal" data-bs-target="#popup"> -->
+					<!-- <img src="/pfp/" alt="Your profile picture." style="border-radius:50px;max-width:416px;"> -->
+				<!-- </div> -->
 			<div id="popup" class="modal">
 				<div class="modal-dialog modal-dialog-centered">
 					<div class="modal-content" style="background-color:#17242C;border:solid 5px #fff;border-radius: 10px;">
-						{% if pfp == '' %}
-							<div class="fas fa-user-astronaut p-5" style="border: solid 3px #fff; border-radius: 10px; font-size: 300px;"></div>
-						{% else %}
-							<img src="/pfp/{{ pfp }}" alt="Your profile picture." style="border-radius:10px;max-width:100%;">
-						{% endif %}
+						<div class="fas fa-user-astronaut p-5" style="border: solid 3px #fff; border-radius: 10px; font-size: 300px;"></div>
+							<!-- <img src="/pfp/" alt="Your profile picture." style="border-radius:10px;max-width:100%;"> -->
 						<a class="btn btn-primary" href="{{ path('app_pfp_change') }}"">Change your profile picture</a>
 					</div>
 				</div>
@@ -53,9 +47,6 @@ input[type="file"] {
 							<a class="btn btn-secondary btn-sm" href="{{ path('app_prof_connect', {etat: 'connection'}) }}" style="border-radius:50px; font-size:30px;">Connection</a>
 						</div>
 					</div>
-				{% elseif connectee == 'true' %}
-					<h2>{{ email }}</h2>
-					<h4>Montrer ses vidéos et commentaires</h4>
 				{%endif %}
 			</div>
 		</div>

@@ -27,80 +27,21 @@ class LoginController extends AbstractController
 		$error = '';
 
 		// last username entered by the user
-		$username = $authenticationUtils->getLastUsername();
+		$lastUsername = $authenticationUtils->getLastUsername();
 		
-		// creates a user object and initializes some data for this example
-
-        $form2 = $this->createform(LoginType::class, $login);
-		
-		$form2->handleRequest($request);
-		
-		if ($form2->isSubmitted() && $form2->isValid()) {
-            // $form2->getData() holds the submitted values
-            // but, the original `$login` variable has also been updated
-            $login = $form2->getData();
-
-            // ... perform2 some action, such as saving the login to the database
-			$verif = $repository->findByUserNameField($login->getUserName());
-			$verif2 = $repository->findByEmailField($login->getEmail());
-			$verif3 = $repository->findByPasswordField($login->getPassword());
-			
-			if (!$verif or !$verif2 or !$verif3) {
-				$error = 'erreur';
-				return $this->render('profile/inscri_co.html.twig', [
-					'form' => 'undefined',
-					'form2' => $form2,
-					'etat' => 'connection',
-					'error' => $error,
-					'connectee' => false
-				]);
-			}
-			
-			$session->set('id',$repository->findIdByUserName($login->getUserName()));
-			$session->set('username',$login->getUserName());
-			$session->set('email',$login->getEmail());
-			$session->set('password',$login->getPassword());
-			$session->set('pfp',$repository->findByPfpNameField($login->getUserName())[0]['pfpName']);
-			
-			$username = $session->get('username');
-			$email = $session->get('email');
-			$password = $session->get('password');
-			$pfp = $session->get('pfp');
-			$image = $session->get('pfp');
-			
-            return $this->redirectToRoute('app_prof_show', [
-				'image' => $image,
-				'username' => $username,
-				'email' => $email,
-				'password' => $password,
-				'pfp' => $pfp,
-				'login' => $login,
-				'etat' => 'inscrit',
-				'connectee' => true
-			]);
-		}
-		
-		$username = $session->get('username');
-		$email = $session->get('email');
-		$password = $session->get('password');
-		$pfp = $session->get('pfp');
-		$image = $session->get('pfp');
 		return $this->render('profile/inscri_co.html.twig', [
-			'image' => $image,
-			'form' => 'undefined',
-			'form2' => $form2,
+			'controller_name' => 'LoginController',
 			'etat' => 'connection',
-			'error' => $error,
-			'connectee' => false
+			'last_username' => $lastUsername,
+			'error'         => $error,
 		]);
     }
 	
 	#[Route('/deconnection', name: 'app_prof_deconnect')]
 	public function deco(SessionInterface $session){
 		$session->clear();
-		$image = $session->get('pfp');
+		
 		return $this->redirectToRoute('app_prof_show', [
-			'image' => $image,
 			'connectee' => false
 		]);
 	}

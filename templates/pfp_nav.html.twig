@@ -1,12 +1,8 @@
 {% block i %}
-	{% if image == '' %}
-		<i class="fas fa-user-astronaut p-2" style="color:grey;border: solid 2px grey; border-radius: 50px; font-size: 35px;"></i>
-	{% endif %}
+	<i class="fas fa-user-astronaut p-2" style="color:grey;border: solid 2px grey; border-radius: 50px; font-size: 35px;"></i>	
 {% endblock %}
 
 
 {% block img %}
-	{% if image != '' %}
-		<img src="/pfp/{{ image }}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;">
-	{% endif %}
+	<!-- <img src="/pfp/" style="width:70px;height:70px;border-radius:50%;object-fit:cover;"> -->
 {% endblock %}

@@ -19,9 +19,9 @@ class VinylController extends AbstractController
     #[Route('/', name: 'app_homepage')]
     public function homepage(SessionInterface $session, UserRepository $repository): Response
     {
-		$image = $session->get('pfp');
+		
         return $this->render('vinyl/homepage.html.twig', [
-			'image' => $image,
+			
             'title' => 'VideoTube',
         ]);
     }

@@ -3,10 +3,7 @@
 {% block body %}
 <div class="container">
 	{% if me == true %}
-		<h1>Your videos.</h1>
-	{% endif %}
-	{% if genre == minestring %}
-		<h1>My videos</h1>
+		<h1>My videos.</h1>
 	{% else %}
 		<h1>Browse {{ genre ? genre : 'All Genres' }}</h1>
 	{% endif %}
@@ -15,7 +12,7 @@
     <ul class="genre-list ps-0 mt-2 mb-3">
 		<li class="d-inline">
 			<a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
-				slug: mine
+				slug: 'me'
 			}) }}">My videos</a>
 		</li>
 		<li class="d-inline">
@@ -36,7 +33,7 @@
     </ul>
 
     <div>
-		{% if genre == minestring %}
+		{% if me == true %}
 			<h2 class="mt-5">My videos</h2>
 		{% else %}
 			<h2 class="mt-5">{{ genre ? genre : 'All videos' }}</h2>
