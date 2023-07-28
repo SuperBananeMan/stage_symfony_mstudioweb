@@ -27,13 +27,27 @@ class CommentsRepository extends ServiceEntityRepository
      * @return VinylMix[] Returns an array of VinylMix objects
      */
 	 
-    public function commentTaker($session, int $video = null)
+    public function commentTaker(int $video = null)
     {
         $queryBuilder = $this->addOrderByQueryBuilder();
         if ($video) {
 			$queryBuilder
 				->andWhere('comments.video = :vid')
 				->setParameter('vid', $video)
+				->setMaxResults(10)
+				->getQuery()
+			;
+		}
+		return $queryBuilder;
+    }
+	
+	public function commentTakerByUser(int $userId = null)
+    {
+        $queryBuilder = $this->addOrderByQueryBuilder();
+        if ($userId) {
+			$queryBuilder
+				->andWhere('comments.uploader = :use')
+				->setParameter('use', $userId)
 				->setMaxResults(10)
 				->getQuery()
 			;

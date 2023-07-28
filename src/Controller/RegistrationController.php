@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\Videos;
 use App\Form\UserType;
+use App\Repository\CommentsRepository;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Vich\UploaderBundle\Form\Type\VichFileType;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -14,12 +16,19 @@ use Acme\AccountBundle\Form\Model\Registration;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\ResetType;
+use Symfony\Component\Form\Extension\Core\Type\ButtonType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Pagerfanta;
+use function Symfony\Component\String\u;
+use App\Repository\VideosRepository;
 
 class RegistrationController extends AbstractController
 {
@@ -36,7 +45,6 @@ class RegistrationController extends AbstractController
         $user = new User();
 		
 		
-
         $form = $this->createForm(UserType::class, $user);
 		
 		$form->handleRequest($request);
@@ -59,25 +67,27 @@ class RegistrationController extends AbstractController
             return $this->redirectToRoute('app_prof_show', [
 				'image' => "",
 				'user' => $user,
+				'pfpName' => '',
 				'etat' => 'inscrit',
 				'connectee' => true
 			]);
 		}
 		
 		return $this->render('profile/inscri_co.html.twig', [
-			'last_username' => $lastUsername,
-			'error' => $error,
-			'image' => "",
-			'form' => $form->createView(),
+			'pfpName' => '',
+			'form' => $form,
 			'etat' => 'inscription',
 			'connectee' => false
 		]);
     }
 	
 	#[Route('/profile', name: 'app_prof_show')]
-	public function show_prof(SessionInterface $session, Request $request, EntityManagerInterface $entityManager)
+	public function show_prof(SessionInterface $session, CommentsRepository $commentRepository, Request $request, EntityManagerInterface $entityManager, AuthenticationUtils $authenticationUtils, VideosRepository $videoRepository, string $slug = null)
 	{
-		$username = $session->get('username');
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+		
+		$username = $this->getUser();
+		
 		if($username != ''){
 			$connectee = true;
 		}
@@ -85,71 +95,141 @@ class RegistrationController extends AbstractController
 			$connectee = false;
 		}
 		
+		$genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
+        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($session, $slug, $username->getId());
+        $adapter = new QueryAdapter($queryBuilder);
+        $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
+            $adapter,
+            $request->query->get('', 1),
+            9
+        );
+		
+		$queryBuildercomment = $commentRepository->commentTakerByUser($username->getId());
+        $adaptercomment = new QueryAdapter($queryBuildercomment);
+        $pagerfantacomment = Pagerfanta::createForCurrentPageWithMaxPerPage(
+            $adaptercomment,
+            $request->query->get('page', 1),
+			10
+        );
+		
+		$numbers = array();
+		
+		foreach($pagerfantacomment as $comms){
+			$numbers[] = $username->getPfpName();
+		}
+		
 		return $this->render('profile/profile.html.twig', [
-			'username' => '',
+			'ogUser' => true,
+			'numbers' => $numbers,
+			'userid' => $username->getId(),
+			'username' => $username->getUsername(),
+			'pfpName' => $username->getPfpName(),
 			'etat' => 'connectee',
-			'connectee' => $connectee
+			'connectee' => $connectee,
+			'pager' => $pagerfanta,
+			'pagercomment' => $pagerfantacomment,
+		]);
+	}
+	
+	#[Route('/profile/{id}', name: 'app_prof_show_other')]
+	public function show_prof_other(SessionInterface $session, CommentsRepository $commentRepository, Request $request, EntityManagerInterface $entityManager, AuthenticationUtils $authenticationUtils, VideosRepository $videoRepository, string $id = null, string $slug = null)
+	{
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+		
+		$username = $this->getUser();
+		
+		if($id == $username->getId()){
+			return $this->redirectToRoute('app_prof_show');
+		}
+		
+		if($username != ''){
+			$connectee = true;
+		}
+		else{
+			$connectee = false;
+		}
+		
+		$utilisateur = $entityManager->getRepository(User::class)->find($id);
+		
+		$genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
+        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($slug, $id);
+        $adapter = new QueryAdapter($queryBuilder);
+        $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
+            $adapter,
+            $request->query->get('', 1),
+            9
+        );
+		
+		$queryBuildercomment = $commentRepository->commentTakerByUser($utilisateur->getId());
+        $adaptercomment = new QueryAdapter($queryBuildercomment);
+        $pagerfantacomment = Pagerfanta::createForCurrentPageWithMaxPerPage(
+            $adaptercomment,
+            $request->query->get('page', 1),
+			10
+        );
+		
+		$numbers = array();
+		
+		foreach($pagerfantacomment as $comms){
+			$numbers[] = $utilisateur->getPfpName();
+		}
+		
+		return $this->render('profile/profile.html.twig', [
+			'ogUser' => false,
+			'numbers' => $numbers,
+			'userid' => $utilisateur->getId(),
+			'username' => $utilisateur->getUsername(),
+			'pfpName' => $username->getPfpName(),
+			'pfpNameOther' => $utilisateur->getPfpName(),
+			'etat' => 'connectee',
+			'connectee' => $connectee,
+			'pager' => $pagerfanta,
+			'pagercomment' => $pagerfantacomment,
 		]);
 	}
 	
 	#[Route('/pfpchange', name: 'app_pfp_change')]
-	public function show_prof_prof(SessionInterface $session, Request $request, EntityManagerInterface $entityManager)
+	public function show_prof_prof(SessionInterface $session, Request $request, EntityManagerInterface $entityManager, AuthenticationUtils $authenticationUtils)
 	{
-		$lid = $session->get('id')[0];
-		$user = $entityManager->getRepository(User::class)->find($lid);
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+		
+		$username = $this->getUser();
+		
+		$user = $entityManager->getRepository(User::class)->find($username);
 
 		$formpfp = $this->createFormBuilder($user)
 			->add('pfp', VichFileType::class, ['label' => ' ','attr' => ['onchange' => 'loadFile(event)']])
 			->add('save', SubmitType::class, ['label' => 'Save and Add'])
+			->add('reset', ResetType::class, ['label' => 'Delete File','attr' => ['class' => 'btn btn-secondary']])
 			->getForm();
 		
 		$formpfp->handleRequest($request);
 		
 		if ($formpfp->isSubmitted() && $formpfp->isValid()) {
 			$user->setPfpName($user->getPfp()->getClientOriginalName());
-
+			
 			$entityManager->flush();
 			
-			$session->set('pfp',$user->getPfpName());
+			$newpfpName = $user->getPfpName();
 			
-			$username = $session->get('username');
-			$email = $session->get('email');
-			$password = $session->get('password');
-			$pfp = $session->get('pfp');
+			$file = $user->getPfp();
+			
+			$user->setPfp(null);
 			
 			return $this->redirectToRoute('app_prof_show', [
-				
+				'pfpName' => $newpfpName,
+				'file' => $file,
 				'formpfp' => $formpfp,
-				'username' => $username,
-				'email' => $email,
-				'password' => $password,
-				'pfp' => $pfp,
 				'etat' => 'inscrit',
 				'connectee' => true
 			]);
 		}
 		
-		$session->set('pfp',$user->getPfpName());
-		
-		$username = $session->get('username');
-		$email = $session->get('email');
-		$password = $session->get('password');
-		$pfp = $session->get('pfp');
-		
 		return $this->render('profile/pfpchange.html.twig', [
-			
+			'pfpName' => $username->getPfpName(),
 			'formpfp' => $formpfp,
-			'username' => $username,
-			'email' => $email,
-			'password' => $password,
-			'pfp' => $pfp,
 			'etat' => 'connectee',
 			'connectee' => true
 		]);
-	}
-	
-	#[Route('/other', name: 'app_prof_other')]
-	public function show_prof_other(){
-		return null;
 	}
 }

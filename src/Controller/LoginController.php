@@ -11,11 +11,12 @@ use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class LoginController extends AbstractController
@@ -30,16 +31,18 @@ class LoginController extends AbstractController
 		$lastUsername = $authenticationUtils->getLastUsername();
 		
 		return $this->render('profile/inscri_co.html.twig', [
+			'pfpName' => '',
 			'controller_name' => 'LoginController',
 			'etat' => 'connection',
 			'last_username' => $lastUsername,
-			'error'         => $error,
+			'error' => $error,
 		]);
     }
 	
 	#[Route('/deconnection', name: 'app_prof_deconnect')]
-	public function deco(SessionInterface $session){
-		$session->clear();
+	public function deco(Security $security){
+        // you can also disable the csrf logout
+        $response = $security->logout(false);
 		
 		return $this->redirectToRoute('app_prof_show', [
 			'connectee' => false

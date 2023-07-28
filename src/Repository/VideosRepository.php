@@ -45,11 +45,11 @@ class VideosRepository extends ServiceEntityRepository
      * @return VinylMix[] Returns an array of VinylMix objects
      */
 	 
-    public function createOrderedByQueryBuilder($session, string $genre = null, int $video = null)
+    public function createOrderedByQueryBuilder($session, string $genre = null, string $user = null)
     {
         $queryBuilder = $this->addOrderByQueryBuilder();
         if ($genre) {
-			if ($genre == strval($session->get('id')[0]['id'])){
+			if ($genre == $user){
 				$queryBuilder->andWhere('mix.uploader = :genre')
 					->setParameter('genre', $genre);
 			}

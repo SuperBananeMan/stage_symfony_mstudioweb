@@ -31,6 +31,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Repository\VideosRepository;
 
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+
 class VideoController extends AbstractController
 {
 	public function __construct(
@@ -38,11 +41,15 @@ class VideoController extends AbstractController
     )
     {}
 	
-	#[Route('/browse/{slug}', name: 'app_browse')]
-    public function browse(SessionInterface $session, VideosRepository $videoRepository, Request $request, string $slug = null): Response
+	#[Route('/browse/{slug?}', name: 'app_browse')]
+	public function browse(SessionInterface $session, VideosRepository $videoRepository, Request $request, string $slug = null, AuthenticationUtils $authenticationUtils): Response
     {
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+		
+		$username = $this->getUser();
+		
         $genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
-        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($session, $slug);
+        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($session, $slug, $username->getId());
         $adapter = new QueryAdapter($queryBuilder);
         $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
             $adapter,
@@ -50,23 +57,21 @@ class VideoController extends AbstractController
             9
         );
 		
-		if(gettype($genre) == 'int'){
-			$me = true;
-		}
-		else{
-			$me = false;
-		}
-		
         return $this->render('vinyl/browse.html.twig', [
-			'me' => $me,
+			'pfpName' => $username->getPfpName(),
+			'user' => $username->getId(),
 			'genre' => $genre,
             'pager' => $pagerfanta,
         ]);
     }
 	
 	#[Route('/video/newform', name: 'app_video_new_form')]
-	public function new(Request $request, EntityManagerInterface $entityManager, SessionInterface $session, UserRepository $repository): Response
+	public function new(Request $request, EntityManagerInterface $entityManager, SessionInterface $session, UserRepository $repository, AuthenticationUtils $authenticationUtils): Response
 	{
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+		
+		$username = $this->getUser();
+		
 		$video = new Videos();
 		$video->setNom('');
 		$video->setTitle('');
@@ -78,7 +83,7 @@ class VideoController extends AbstractController
 		
 		// $up = $session->get('username');
 		// $up = $repository->findOneBy(['username' => $up]);
-		$video->setUploader(3);//$up->getId()
+		$video->setUploader($username->getId());//$up->getId()
 
         $form = $this->createForm(VideoType::class, $video);
 		
@@ -98,35 +103,43 @@ class VideoController extends AbstractController
 			
 			
 			return $this->redirectToRoute('app_video_new', [
+				'pfpName' => $username->getPfpName(),
 				'video' => $video,
 				'slug' => $video->getSlug(),
 			]);
 		}
 		
 		return $this->render('video/videoaddForm.html.twig', [
+			'pfpName' => $username->getPfpName(),
 			'form2' => $form,
 		]);
 	}
 	
     #[Route('/video/new/{slug}', name: 'app_video_new')]
-    public function newshow(SessionInterface $session, Videos $video): Response
+    public function newshow(SessionInterface $session, Videos $video, AuthenticationUtils $authenticationUtils): Response
     {
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+		
+		$username = $this->getUser();
 		
 		return $this->render('video/videoadd.html.twig', [
+			'pfpName' => $username->getPfpName(),
 			'video' => $video,
 		]);
     }
 	
 	#[Route('/video/{slug}', name: 'app_video_show')]
-    public function show(Videos $video, SessionInterface $session, CommentsRepository $commentRepository, Request $request, EntityManagerInterface $entityManager, UserRepository $repository): Response
+    public function show(SessionInterface $session, Videos $video, Security $security, CommentsRepository $commentRepository, Request $request, EntityManagerInterface $entityManager, UserRepository $repository, AuthenticationUtils $authenticationUtils): Response
 	{
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+		
+		$username = $this->getUser();
+		
 		$comment = new Comments();
-		$comment->setUserNameComment($session->get('username'));
+		$comment->setUserNameComment($username->getEmail());
 		$comment->setContentComment('');
 		
-		$up = $session->get('username');
-		$up = $repository->findOneBy(['username' => $up]);
-		$comment->setUploaderComment($up->getId());
+		$comment->setUploaderComment($username->getId());
 		
 		$comment->setVideoComment($video->getId());
 		
@@ -150,14 +163,14 @@ class VideoController extends AbstractController
 			
 			
 			return $this->redirectToRoute('app_video_show', [
-				
+				'pfpName' => $username->getPfpName(),
 				'slug' => $video->getSlug(),
 				'formcom' => $formcom,
 				'video' => $video,
 			]);
 		}
 		
-        $queryBuilder = $commentRepository->commentTaker($session, $video->getId());
+        $queryBuilder = $commentRepository->commentTaker($video->getId());
         $adapter = new QueryAdapter($queryBuilder);
         $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
             $adapter,
@@ -174,7 +187,7 @@ class VideoController extends AbstractController
 		
 
         return $this->render('video/show.html.twig', [
-			
+			'pfpName' => $username->getPfpName(),
 			'numbers' => $numbers,
 			'formcom' => $formcom,
 			'video' => $video,
