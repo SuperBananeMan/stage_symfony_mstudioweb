@@ -48,7 +48,7 @@
 				{% for comment in pager %}
 					<div class="row" style="margin-bottom:25px;">
 						<div class="col col-md-1" style="text-align:center;">
-							<a href="/">
+							<a href="/profile/{{ comment.uploaderComment }}">
 								{% if numbers[loop.index0] == '' %}
 									<i class="fas fa-user-astronaut p-2" style="color:grey;border: solid 2px grey; border-radius: 50px; font-size: 50px;"></i>
 								{% else %}

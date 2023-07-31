@@ -2,6 +2,10 @@
 
 namespace App\Controller;
 
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Filesystem\Path;
+
 use App\Entity\User;
 use App\Entity\Videos;
 use App\Form\UserType;
@@ -96,7 +100,7 @@ class RegistrationController extends AbstractController
 		}
 		
 		$genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
-        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($session, $slug, $username->getId());
+        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($username->getId(),$username->getId());
         $adapter = new QueryAdapter($queryBuilder);
         $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
             $adapter,
@@ -189,11 +193,13 @@ class RegistrationController extends AbstractController
 	}
 	
 	#[Route('/pfpchange', name: 'app_pfp_change')]
-	public function show_prof_prof(SessionInterface $session, Request $request, EntityManagerInterface $entityManager, AuthenticationUtils $authenticationUtils)
+	public function show_prof_prof(SessionInterface $session, Request $request, EntityManagerInterface $entityManager, AuthenticationUtils $authenticationUtils, Filesystem $filesystem)
 	{
 		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 		
 		$username = $this->getUser();
+		
+		$saveOlfPfp = $username->getPfpName();
 		
 		$user = $entityManager->getRepository(User::class)->find($username);
 
@@ -215,6 +221,8 @@ class RegistrationController extends AbstractController
 			$file = $user->getPfp();
 			
 			$user->setPfp(null);
+			
+			$filesystem->remove("C:/Users/damie/mixed_vinyl/public/pfp/{$saveOlfPfp}");
 			
 			return $this->redirectToRoute('app_prof_show', [
 				'pfpName' => $newpfpName,

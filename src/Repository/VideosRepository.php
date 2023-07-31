@@ -45,7 +45,7 @@ class VideosRepository extends ServiceEntityRepository
      * @return VinylMix[] Returns an array of VinylMix objects
      */
 	 
-    public function createOrderedByQueryBuilder($session, string $genre = null, string $user = null)
+    public function createOrderedByQueryBuilder(string $genre = null, string $user = null)
     {
         $queryBuilder = $this->addOrderByQueryBuilder();
         if ($genre) {
@@ -66,6 +66,26 @@ class VideosRepository extends ServiceEntityRepository
         $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('mix');
 
         return $queryBuilder->orderBy('mix.createdAt', 'DESC');
+    }
+	
+	public function videoTakerAll(string $search = null)
+    {
+        $queryBuilder = $this->addOrderByQueryBuilderVideos();
+		$queryBuilder
+			->addSelect('videos.nom');
+		
+		if ($search) {
+            $queryBuilder->andWhere('videos.nom LIKE :searchTerm')
+                ->setParameter('searchTerm', '%'.$search.'%');
+        }
+		return $queryBuilder;
+    }
+	
+	private function addOrderByQueryBuilderVideos(QueryBuilder $queryBuilder = null): QueryBuilder
+    {
+        $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('videos');
+		
+        return $queryBuilder->orderBy('videos.createdAt', 'DESC');
     }
 
 //    /**

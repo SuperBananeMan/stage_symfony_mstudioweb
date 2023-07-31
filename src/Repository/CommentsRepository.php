@@ -68,6 +68,26 @@ class CommentsRepository extends ServiceEntityRepository
 
         return $queryBuilder;
     }
+	
+	public function commentTakerAll(string $search = null)
+    {
+        $queryBuilder = $this->addOrderByQueryBuilderComments();
+		$queryBuilder
+			->addSelect('comments.content');
+		
+		if ($search) {
+            $queryBuilder->andWhere('comments.content LIKE :searchTerm')
+                ->setParameter('searchTerm', '%'.$search.'%');
+        }
+		return $queryBuilder;
+    }
+	
+	private function addOrderByQueryBuilderComments(QueryBuilder $queryBuilder = null): QueryBuilder
+    {
+        $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('comments.content');
+		
+        return $queryBuilder->orderBy('comments.createdAt', 'DESC');
+    }
 
 //    /**
 //     * @return Videos[] Returns an array of Videos objects

@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-12 col-md-12 ps-5">
+			{% if is_granted('IS_AUTHENTICATED_FULLY') %}
+				<div class="row" style="margin-top:30px;">
+					<div class="col-md-12 mixed-vinyl-container p-3" style="border-radius:50px;">
+						<h3 style="text-align:center;">Users</h3>
+							{% for user in pageruser %}
+								<div class="row">
+									<p>{{ user }}</p>
+								</div>
+							{% endfor %}
+						{{ pagerfanta(pagercomment) }}
+					</div>
+					<div class="col-md-12 mixed-vinyl-container p-3" style="border:solid 5px #17242c;border-radius:50px;">
+						<h3 style="text-align:center;">My videos</h3>
+							<div class="row">
+								{% for video in pagervideo %}
+									<div class="col col-md-4">
+										<p>{{ video }}</p>
+									</div>
+								{% endfor %}
+							</div>
+							<h5>More of my videos : <a href="{{ path('app_browse', {slug: userid}) }}">My videos</a></h5>
+					</div>
+					<div class="col-md-12 mixed-vinyl-container p-3" style="border-radius:50px;">
+						<h3 style="text-align:center;">My comments</h3>
+							{% for comment in pagercomment %}
+								<div class="row">
+									<p>{{ comment }}</p>
+								</div>
+							{% endfor %}
+						{{ pagerfanta(pagercomment) }}
+					</div>
+				</div>
+			{% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

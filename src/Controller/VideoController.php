@@ -49,7 +49,7 @@ class VideoController extends AbstractController
 		$username = $this->getUser();
 		
         $genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
-        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($session, $slug, $username->getId());
+        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($slug, $username->getId());
         $adapter = new QueryAdapter($queryBuilder);
         $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
             $adapter,
