@@ -42,8 +42,6 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 	public function userTakerAll(string $search = null)
     {
         $queryBuilder = $this->addOrderByQueryBuilderUser();
-		$queryBuilder
-			->addSelect('user.username');
 		
 		if ($search) {
             $queryBuilder->andWhere('user.username LIKE :searchTerm')
@@ -56,7 +54,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('user');
 		
-        return $queryBuilder->orderBy('user.createdAt', 'DESC');;
+        return $queryBuilder;
     }
 
 //    /**

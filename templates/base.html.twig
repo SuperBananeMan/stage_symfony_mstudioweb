@@ -35,15 +35,23 @@
 						<i class="fas fa-file-video"></i>
 						VideoTube
 					</a>
-<style>
+<style type="text/css">
 .search{
 	border:solid 3px white;
 	border-radius:0px 50px 50px 0px;
 	background-color:white;
-	width:4.5%;
+	width:4%;
 }
 .search:hover{
 	background-color:#e0e0e0;
+}
+.errspan {
+	pointer-events: none;
+	float: right;
+	margin-right: 10px;
+	margin-top: -24px;
+	position: relative;
+	color: black;
 }
 .search-bar{
 	border:solid 3px white;
@@ -52,23 +60,47 @@
 	width:40%;
 }
 </style>
-					<div class="position-absolute top-50 start-50 translate-middle search-bar">
-						<input type="text" id="search" name="search" style="width:95%;border:solid 3px white;border-radius:50px 0px 0px 50px;">
-						<button class="search" id="search-button" name="search-button" onclick="location.href=`{{ path('app_search') }}`;"><i class="fas fa-search"></i></button>
-					</div>
-					
+<!-- <form id="formSearch" action="{{ path('app_search') }}" method="post"> -->
+	<!-- <div class="position-absolute top-50 start-50 translate-middle search-bar"> -->
+		<!-- <input type="text" id="search" name="search" style="width:95%;border:solid 3px white;border-radius:50px 0px 0px 50px;"> -->
+		<!-- <input type="submit" class="search" id="search-button" name="search-button" value=""> -->
+		<!-- <span class="fas fa-search errspan" id="clickSpan" onclick="spanClick()"></span> -->
+	<!-- </div> -->
+<!-- </form> -->
+					{% if is_granted('IS_AUTHENTICATED_REMEMBERED') %}
+					{% if formSearch != '' %}
+						{{ form_start(formSearch, {'attr': {'novalidate': 'novalidate'}}) }}
+							<div class="position-absolute top-50 start-50 translate-middle search-bar">
+								<input id="search" style="width:95%;border:solid 3px white;border-radius:50px 0px 0px 50px;display: inline;"
+									name="{{ field_name(formSearch.search) }}"
+									value="{{ field_value(formSearch.search) }}"
+									placeholder="{{ field_label(formSearch.search) }}"
+									class="form-control"
+								/>
+								<button type="submit" class="search" id="search-button" name="search-button" value=""><i class="fas fa-search"></i></button>
+							</div>
+						{{ form_end(formSearch) }}
+					{% endif %}
+					{% endif %}
 					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-label="Toggle navigation">
 						<span class="navbar-toggler-icon"></span>
 					</button>
 					
 					<div class="collapse navbar-collapse d-flex justify-content-end" id="navbarNavDropdown">
 						<ul class="navbar-nav">
+							{% if is_granted('ROLE_ADMIN') %}
+								<li class="nav-item">
+									<a class="nav-link" style="margin-top:20px;" href="{{ path('app_admin' ) }}">Admin Forum</a>
+								</li>
+							{% endif %}
+							{% if is_granted('IS_AUTHENTICATED_REMEMBERED') %}
 							<li class="nav-item">
 								<a class="nav-link" style="margin-top:20px;" href="/video/newform">Upload a video</a>
 							</li>
 							<li class="nav-item">
 								<a class="nav-link" style="margin-top: 20px;" href="/browse">Video browse</a>
 							</li>
+							{% endif %}
 
 								<li class="nav-item dropdown">
 									<div class="btn-group">
@@ -85,11 +117,20 @@
 										</a>
 
 										<ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownMenuLink">
-											<li><a class="dropdown-item" href="{{ path('app_prof_show' ) }}">Profile</a></li>
+											{% if is_granted('IS_AUTHENTICATED_REMEMBERED') %}
+												<li><a class="dropdown-item" href="{{ path('app_prof_show' ) }}">Profile</a></li>
+											{% endif %}
 											<li><a class="dropdown-item" href="{{ path('app_prof_sign' ) }}">Sign in</a></li>
 											<li><a class="dropdown-item" href="{{ path('app_prof_connect' ) }}">Login</a></li>
-											<li><a class="dropdown-item" href="/browse">My videos</a></li>
-											<li><a class="dropdown-item" href="{{ path('app_admin' ) }}">Admin</a></li>
+											{% if is_granted('IS_AUTHENTICATED_REMEMBERED') %}
+												<li><a class="dropdown-item" href="/browse">My videos</a></li>
+											{% endif %}
+											{% if is_granted('ROLE_ADMIN') %}
+												<li><a class="dropdown-item" href="{{ path('app_admin' ) }}">Admin Forum</a></li>
+											{% endif %}
+											{% if is_granted('ROLE_ADMIN') %}
+												<li><a class="dropdown-item" href="{{ path('app_prof_deconnect') }}">Sign Out</a></li>
+											{% endif %}
 										</ul>
 									</div>
 								</li>

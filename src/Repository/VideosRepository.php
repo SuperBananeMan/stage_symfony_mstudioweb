@@ -71,11 +71,11 @@ class VideosRepository extends ServiceEntityRepository
 	public function videoTakerAll(string $search = null)
     {
         $queryBuilder = $this->addOrderByQueryBuilderVideos();
-		$queryBuilder
-			->addSelect('videos.nom');
 		
 		if ($search) {
             $queryBuilder->andWhere('videos.nom LIKE :searchTerm')
+                ->setParameter('searchTerm', '%'.$search.'%');
+			$queryBuilder->orWhere('videos.description LIKE :searchTerm')
                 ->setParameter('searchTerm', '%'.$search.'%');
         }
 		return $queryBuilder;

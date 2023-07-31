@@ -78,6 +78,7 @@ class RegistrationController extends AbstractController
 		}
 		
 		return $this->render('profile/inscri_co.html.twig', [
+			'formSearch' => '',
 			'pfpName' => '',
 			'form' => $form,
 			'etat' => 'inscription',
@@ -122,7 +123,26 @@ class RegistrationController extends AbstractController
 			$numbers[] = $username->getPfpName();
 		}
 		
+		$defaultData = ['message' => 'Type your message here'];
+        $formSearch = $this->createFormBuilder($defaultData)
+            ->add('search', TextType::class)
+            
+            ->getForm();
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+				'pfpName' => $username->getPfpName(),
+			]);
+        }
+		
 		return $this->render('profile/profile.html.twig', [
+			'formSearch' => $formSearch,
 			'ogUser' => true,
 			'numbers' => $numbers,
 			'userid' => $username->getId(),
@@ -178,7 +198,26 @@ class RegistrationController extends AbstractController
 			$numbers[] = $utilisateur->getPfpName();
 		}
 		
+		$defaultData = ['message' => 'Type your message here'];
+        $formSearch = $this->createFormBuilder($defaultData)
+            ->add('search', TextType::class)
+            
+            ->getForm();
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+				'pfpName' => $username->getPfpName(),
+			]);
+        }
+		
 		return $this->render('profile/profile.html.twig', [
+			'formSearch' => $formSearch,
 			'ogUser' => false,
 			'numbers' => $numbers,
 			'userid' => $utilisateur->getId(),
@@ -198,6 +237,23 @@ class RegistrationController extends AbstractController
 		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 		
 		$username = $this->getUser();
+		
+		$defaultData = ['message' => 'Type your message here'];
+        $formSearch = $this->createFormBuilder($defaultData)
+            ->add('search', TextType::class)
+            
+            ->getForm();
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'formSearch' => $formSearch,
+				'pfpName' => $username->getPfpName(),
+			]);
+        }
 		
 		$saveOlfPfp = $username->getPfpName();
 		
@@ -234,6 +290,7 @@ class RegistrationController extends AbstractController
 		}
 		
 		return $this->render('profile/pfpchange.html.twig', [
+			'formSearch' => $formSearch,
 			'pfpName' => $username->getPfpName(),
 			'formpfp' => $formpfp,
 			'etat' => 'connectee',

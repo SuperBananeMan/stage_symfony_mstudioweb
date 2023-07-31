@@ -18,54 +18,114 @@ use Symfony\Component\Routing\Annotation\Route;
 use function Symfony\Component\String\u;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+
 class VinylController extends AbstractController
 {
     #[Route('/', name: 'app_homepage')]
-    public function homepage(SessionInterface $session, UserRepository $repository, AuthenticationUtils $authenticationUtils): Response
+    public function homepage(Request $request,SessionInterface $session, UserRepository $repository): Response
     {
 		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 		
 		$username = $this->getUser();
 		
+        $formSearch = $this->createFormBuilder()
+            ->add('search', TextType::class)
+            ->getForm();
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+				'pfpName' => $username->getPfpName(),
+			]);
+        }
+		
         return $this->render('vinyl/homepage.html.twig', [
+			'formSearch' => $formSearch,
 			'pfpName' => $username->getPfpName(),
         ]);
     }
 	
 	#[Route('/search', name: 'app_search')]
-	public function search(Request $request,CommentsRepository $commentsRepository,VideosRepository $videosRepository,UserRepository $repository)
+	public function search(Request $request,CommentsRepository $commentsRepository,VideosRepository $videosRepository,UserRepository $repository)
 	{
+		$dataSearch = $request->get("dataSearch");
+		if(count($dataSearch) != 1){
+			$dataSearchvar = $dataSearch["search"];
+		}
+		else{
+			$dataSearchvar = null;
+		}
+		
 		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 		
 		$username = $this->getUser();
 		
-		$queryBuildercomment = $commentsRepository->commentTakerAll();
+		$queryBuildercomment = $commentsRepository->commentTakerAll($dataSearchvar);
         $adaptercomment = new QueryAdapter($queryBuildercomment);
         $pagerfantacomment = Pagerfanta::createForCurrentPageWithMaxPerPage(
             $adaptercomment,
             $request->query->get('page', 1),
-			10
+			99
         );
 		
-		$queryBuilderuser = $repository->userTakerAll();
+		$nbComments = $pagerfantacomment->getNbResults();
+		
+		$queryBuilderuser = $repository->userTakerAll($dataSearchvar);
         $adapteruser = new QueryAdapter($queryBuilderuser);
         $pagerfantauser = Pagerfanta::createForCurrentPageWithMaxPerPage(
             $adapteruser,
             $request->query->get('page', 1),
-			10
+			99
         );
 		
-		$queryBuildervideo = $videosRepository->videoTakerAll();
+		$nbUsers = $pagerfantauser->getNbResults();
+		
+		$queryBuildervideo = $videosRepository->videoTakerAll($dataSearchvar);
         $adaptervideo = new QueryAdapter($queryBuildervideo);
         $pagerfantavideo = Pagerfanta::createForCurrentPageWithMaxPerPage(
             $adaptervideo,
             $request->query->get('page', 1),
-			10
+			99
         );
 		
-		dd($queryBuildercomment,$queryBuilderuser,$queryBuildervideo);
+		$nbVideos = $pagerfantavideo->getNbResults();
+		
+		$numbers = array();
+		
+		foreach($pagerfantacomment as $comms){
+			$numbers[] = $repository->find($comms->getUploaderComment())->getPfpName();
+		}
+		
+		$defaultData = ['message' => 'Type your message here'];
+        $formSearch = $this->createFormBuilder($defaultData)
+            ->add('search', TextType::class)
+            ->getForm();
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+				'pfpName' => $username->getPfpName(),
+			]);
+        }
 		
 		return $this->render('search.html.twig', [
+			'nbComments' => $nbComments,
+			'nbUsers' => $nbUsers,
+			'nbVideos' => $nbVideos,
+			'formSearch' => $formSearch,
+			'numbers' => $numbers,
 			'pagercomment' => $pagerfantacomment,
 			'pageruser' => $pagerfantauser,
 			'pagervideo' => $pagerfantavideo,

@@ -57,7 +57,26 @@ class VideoController extends AbstractController
             9
         );
 		
+		$defaultData = ['message' => 'Type your message here'];
+        $formSearch = $this->createFormBuilder($defaultData)
+            ->add('search', TextType::class)
+            
+            ->getForm();
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+				'pfpName' => $username->getPfpName(),
+			]);
+        }
+		
         return $this->render('vinyl/browse.html.twig', [
+			'formSearch' => $formSearch,
 			'pfpName' => $username->getPfpName(),
 			'user' => $username->getId(),
 			'genre' => $genre,
@@ -71,6 +90,24 @@ class VideoController extends AbstractController
 		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 		
 		$username = $this->getUser();
+		
+		$defaultData = ['message' => 'Type your message here'];
+        $formSearch = $this->createFormBuilder($defaultData)
+            ->add('search', TextType::class)
+            
+            ->getForm();
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+				'pfpName' => $username->getPfpName(),
+			]);
+        }
 		
 		$video = new Videos();
 		$video->setNom('');
@@ -110,19 +147,39 @@ class VideoController extends AbstractController
 		}
 		
 		return $this->render('video/videoaddForm.html.twig', [
+			'formSearch' => $formSearch,
 			'pfpName' => $username->getPfpName(),
 			'form2' => $form,
 		]);
 	}
 	
     #[Route('/video/new/{slug}', name: 'app_video_new')]
-    public function newshow(SessionInterface $session, Videos $video, AuthenticationUtils $authenticationUtils): Response
+    public function newshow(Request $request, SessionInterface $session, Videos $video, AuthenticationUtils $authenticationUtils): Response
     {
 		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 		
 		$username = $this->getUser();
 		
+		$defaultData = ['message' => 'Type your message here'];
+        $formSearch = $this->createFormBuilder($defaultData)
+            ->add('search', TextType::class)
+            
+            ->getForm();
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+				'pfpName' => $username->getPfpName(),
+			]);
+        }
+		
 		return $this->render('video/videoadd.html.twig', [
+			'formSearch' => $formSearch,
 			'pfpName' => $username->getPfpName(),
 			'video' => $video,
 		]);
@@ -135,8 +192,26 @@ class VideoController extends AbstractController
 		
 		$username = $this->getUser();
 		
+		$defaultData = ['message' => 'Type your message here'];
+        $formSearch = $this->createFormBuilder($defaultData)
+            ->add('search', TextType::class)
+            
+            ->getForm();
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+				'pfpName' => $username->getPfpName(),
+			]);
+        }
+		
 		$comment = new Comments();
-		$comment->setUserNameComment($username->getEmail());
+		$comment->setUserNameComment($username->getUsername());
 		$comment->setContentComment('');
 		
 		$comment->setUploaderComment($username->getId());
@@ -184,9 +259,13 @@ class VideoController extends AbstractController
 			$numbers[] = $repository->find($comms->getUploaderComment())->getPfpName();
 		}
 		
-		
+		$creator = $repository->find($video->getUploader());
 
         return $this->render('video/show.html.twig', [
+			'uploaderId' => $creator->getId(),
+			'uploaderPfpName' => $creator->getPfpName(),
+			'uploaderUsername' => $creator->getUsername(),
+			'formSearch' => $formSearch,
 			'pfpName' => $username->getPfpName(),
 			'numbers' => $numbers,
 			'formcom' => $formcom,

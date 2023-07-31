@@ -44,15 +44,15 @@
 			<div class="row">
 				{% for video in pager %}
 					<div class="col col-md-4">
-						<div class="mixed-vinyl-container p-3 text-center">
-							<a href="{{ path('app_video_show', {slug: video.slug}) }}">
+						<a href="{{ path('app_video_show', {slug: video.slug}) }}">
+							<div class="mixed-vinyl-container p-3 text-center">
 								<img src="/vid/thumbnail/{{ video.getThumbnail() }}" alt="video album cover" style="background-color:black;width:384px;height:192px;object-fit:scale-down;">
 								<p class="mt-2"><strong>{{ video.nom }}</strong></p>
 								<span style="text-transform:capitalize;">{{ video.genre }}</span>
 								<br>
 								<span>{{ video.createdAt|ago }}</span>
-							</a>
-						</div>
+							</div>
+						</a>
 					</div>
 				{% endfor %}
 				

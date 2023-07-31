@@ -72,11 +72,11 @@ class CommentsRepository extends ServiceEntityRepository
 	public function commentTakerAll(string $search = null)
     {
         $queryBuilder = $this->addOrderByQueryBuilderComments();
-		$queryBuilder
-			->addSelect('comments.content');
 		
 		if ($search) {
             $queryBuilder->andWhere('comments.content LIKE :searchTerm')
+                ->setParameter('searchTerm', '%'.$search.'%');
+			$queryBuilder->orWhere('comments.userName LIKE :searchTerm')
                 ->setParameter('searchTerm', '%'.$search.'%');
         }
 		return $queryBuilder;
@@ -84,7 +84,7 @@ class CommentsRepository extends ServiceEntityRepository
 	
 	private function addOrderByQueryBuilderComments(QueryBuilder $queryBuilder = null): QueryBuilder
     {
-        $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('comments.content');
+        $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('comments');
 		
         return $queryBuilder->orderBy('comments.createdAt', 'DESC');
     }
