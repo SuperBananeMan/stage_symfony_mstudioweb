@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use function Symfony\Component\String\u;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use App\Form\SearchType;
 
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -29,10 +30,8 @@ class VinylController extends AbstractController
 		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 		
 		$username = $this->getUser();
-		
-        $formSearch = $this->createFormBuilder()
-            ->add('search', TextType::class)
-            ->getForm();
+
+        $formSearch = $this->createForm(SearchType::class);
 
         $formSearch->handleRequest($request);
 
@@ -56,7 +55,7 @@ class VinylController extends AbstractController
 	public function search(Request $request,CommentsRepository $commentsRepository,VideosRepository $videosRepository,UserRepository $repository)
 	{
 		$dataSearch = $request->get("dataSearch");
-		if(count($dataSearch) != 1){
+		if($dataSearch != null){
 			$dataSearchvar = $dataSearch["search"];
 		}
 		else{
@@ -96,17 +95,8 @@ class VinylController extends AbstractController
         );
 		
 		$nbVideos = $pagerfantavideo->getNbResults();
-		
-		$numbers = array();
-		
-		foreach($pagerfantacomment as $comms){
-			$numbers[] = $repository->find($comms->getUploaderComment())->getPfpName();
-		}
-		
-		$defaultData = ['message' => 'Type your message here'];
-        $formSearch = $this->createFormBuilder($defaultData)
-            ->add('search', TextType::class)
-            ->getForm();
+
+        $formSearch = $this->createForm(SearchType::class);
 
         $formSearch->handleRequest($request);
 
@@ -121,11 +111,11 @@ class VinylController extends AbstractController
         }
 		
 		return $this->render('search.html.twig', [
+            "dataSearch" => $dataSearch,
 			'nbComments' => $nbComments,
 			'nbUsers' => $nbUsers,
 			'nbVideos' => $nbVideos,
 			'formSearch' => $formSearch,
-			'numbers' => $numbers,
 			'pagercomment' => $pagerfantacomment,
 			'pageruser' => $pagerfantauser,
 			'pagervideo' => $pagerfantavideo,

@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\User;
 use App\Entity\Videos;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
@@ -41,50 +42,39 @@ class VideosRepository extends ServiceEntityRepository
         }
     }
 
-    /**
-     * @return VinylMix[] Returns an array of VinylMix objects
-     */
-	 
-    public function createOrderedByQueryBuilder(string $genre = null, string $user = null)
+    public function createOrderedByQueryBuilder(string $genre = null, User $user = null)
     {
         $queryBuilder = $this->addOrderByQueryBuilder();
         if ($genre) {
-			if ($genre == $user){
-				$queryBuilder->andWhere('mix.uploader = :genre')
-					->setParameter('genre', $genre);
-			}
-			else{
-				$queryBuilder->andWhere('mix.genre = :genre')
-					->setParameter('genre', $genre);
-			}
+            $queryBuilder->andWhere('videos.genre = :genre')
+                ->setParameter('genre', $genre);
 		}
+        if ($user){
+            $queryBuilder->andWhere('videos.user = :user')
+                ->setParameter('user', $user);
+        }
 		return $queryBuilder;
+    }
+
+    public function videoTakerAll(string $search = null)
+    {
+        $queryBuilder = $this->addOrderByQueryBuilder();
+
+        if ($search) {
+            $queryBuilder->andWhere('videos.nom LIKE :searchTerm')
+                ->setParameter('searchTerm', '%'.$search.'%');
+            $queryBuilder->orWhere('videos.description LIKE :searchTerm')
+                ->setParameter('searchTerm', '%'.$search.'%');
+//            $queryBuilder->orWhere('videos.user.username LIKE :searchTerm')
+//                ->setParameter('searchTerm', '%'.$search.'%');
+        }
+        return $queryBuilder;
     }
 	
 	private function addOrderByQueryBuilder(QueryBuilder $queryBuilder = null): QueryBuilder
     {
-        $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('mix');
-
-        return $queryBuilder->orderBy('mix.createdAt', 'DESC');
-    }
-	
-	public function videoTakerAll(string $search = null)
-    {
-        $queryBuilder = $this->addOrderByQueryBuilderVideos();
-		
-		if ($search) {
-            $queryBuilder->andWhere('videos.nom LIKE :searchTerm')
-                ->setParameter('searchTerm', '%'.$search.'%');
-			$queryBuilder->orWhere('videos.description LIKE :searchTerm')
-                ->setParameter('searchTerm', '%'.$search.'%');
-        }
-		return $queryBuilder;
-    }
-	
-	private function addOrderByQueryBuilderVideos(QueryBuilder $queryBuilder = null): QueryBuilder
-    {
         $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('videos');
-		
+
         return $queryBuilder->orderBy('videos.createdAt', 'DESC');
     }
 

@@ -46,7 +46,7 @@ class CommentsRepository extends ServiceEntityRepository
         $queryBuilder = $this->addOrderByQueryBuilder();
         if ($userId) {
 			$queryBuilder
-				->andWhere('comments.uploader = :use')
+				->andWhere('comments.user = :use')
 				->setParameter('use', $userId)
 				->setMaxResults(10)
 				->getQuery()
@@ -54,38 +54,24 @@ class CommentsRepository extends ServiceEntityRepository
 		}
 		return $queryBuilder;
     }
-	
+
+    public function commentTakerAll(string $search = null)
+    {
+        $queryBuilder = $this->addOrderByQueryBuilder();
+
+        if ($search) {
+            $queryBuilder->andWhere('comments.content LIKE :searchTerm')
+                ->setParameter('searchTerm', '%'.$search.'%');
+//            $queryBuilder->orWhere('comments.user LIKE :searchTerm')
+//                ->setParameter('searchTerm', '%'.$search.'%');
+        }
+        return $queryBuilder;
+    }
+
 	private function addOrderByQueryBuilder(QueryBuilder $queryBuilder = null): QueryBuilder
     {
         $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('comments');
 
-        return $queryBuilder->orderBy('comments.createdAt', 'DESC');
-    }
-	
-	private function addOrderByQueryBuilderpfp(QueryBuilder $queryBuilder = null): QueryBuilder
-    {
-        $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('user');
-
-        return $queryBuilder;
-    }
-	
-	public function commentTakerAll(string $search = null)
-    {
-        $queryBuilder = $this->addOrderByQueryBuilderComments();
-		
-		if ($search) {
-            $queryBuilder->andWhere('comments.content LIKE :searchTerm')
-                ->setParameter('searchTerm', '%'.$search.'%');
-			$queryBuilder->orWhere('comments.userName LIKE :searchTerm')
-                ->setParameter('searchTerm', '%'.$search.'%');
-        }
-		return $queryBuilder;
-    }
-	
-	private function addOrderByQueryBuilderComments(QueryBuilder $queryBuilder = null): QueryBuilder
-    {
-        $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('comments');
-		
         return $queryBuilder->orderBy('comments.createdAt', 'DESC');
     }
 

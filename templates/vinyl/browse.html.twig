@@ -2,40 +2,40 @@
 
 {% block body %}
 <div class="container">
-	{% if user != 'null' %}
-		<h1>My videos.</h1>
-	{% else %}
-		<h1>Browse {{ genre ? genre : 'All Genres' }}</h1>
-	{% endif %}
+{#	{% if app.user is same as user %}#}
+{#		<h1>My videos.</h1>#}
+{#	{% else %}#}
+{#		<h1>Browse {{ genre ? genre : 'All Genres' }}</h1>#}
+{#	{% endif %}#}
 
     <h2 class="mt-5 mb-4">Filter by Genre</h2>
     <ul class="genre-list ps-0 mt-2 mb-3">
 			<li class="d-inline">
-				{% if user != 'null' %}
-					<a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
-						slug: user
-					}) }}">My videos</a>
+				{% if app.user != null %}
+					<a class="btn btn-primary" href="{{ path('app_browse_myvideos') }}">My videos</a>
 				{% endif %}
 			</li>
+	</ul>
+	<ul class="genre-list ps-0 mt-2 mb-3">
 			<li class="d-inline">
 				<a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
-					slug: ''
+					genre: ''
 				}) }}">Any Genres</a>
 			</li>
 			<li class="d-inline">
 				<a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
-					slug: 'meme'
+					genre: 'meme'
 				}) }}">Meme</a>
 			</li>
 			<li class="d-inline">
 				<a class="btn btn-primary btn-sm" href="{{ path('app_browse', {
-					slug: 'music'
+					genre: 'music'
 				}) }}">Music</a>
 			</li>
     </ul>
 
     <div>
-		{% if user != 'null' %}
+		{% if genre == app.user %}
 			<h2 class="mt-5">My videos</h2>
 		{% else %}
 			<h2 class="mt-5">{{ genre ? genre : 'All videos' }}</h2>
@@ -45,7 +45,7 @@
 				{% for video in pager %}
 					<div class="col col-md-4">
 						<a href="{{ path('app_video_show', {slug: video.slug}) }}">
-							<div class="mixed-vinyl-container p-3 text-center">
+							<div class="p-3 text-center" style="background-color:#222f36;margin-bottom:20px;border-radius:25px;">
 								<img src="/vid/thumbnail/{{ video.getThumbnail() }}" alt="video album cover" style="background-color:black;width:384px;height:192px;object-fit:scale-down;">
 								<p class="mt-2"><strong>{{ video.nom }}</strong></p>
 								<span style="text-transform:capitalize;">{{ video.genre }}</span>

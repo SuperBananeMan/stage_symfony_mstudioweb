@@ -2,6 +2,9 @@
 
 namespace App\Controller;
 
+use App\Form\SearchType;
+use App\Repository\UserRepository;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
@@ -10,13 +13,14 @@ use App\Entity\User;
 use App\Entity\Videos;
 use App\Form\UserType;
 use App\Repository\CommentsRepository;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
+use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
 use Vich\UploaderBundle\Form\Type\VichFileType;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Acme\AccountBundle\Form\Type\RegistrationType;
-use Acme\AccountBundle\Form\Model\Registration;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -37,7 +41,7 @@ use App\Repository\VideosRepository;
 class RegistrationController extends AbstractController
 {
     #[Route('/register', name: 'app_prof_sign')]
-	public function new(SessionInterface $session, Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher, AuthenticationUtils $authenticationUtils): Response
+	public function new(MailerInterface $mailer, VerifyEmailHelperInterface $verifyEmailHelper, SessionInterface $session, Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher, AuthenticationUtils $authenticationUtils): Response
     {
 		// get the login error if there is one
 		$error = '';
@@ -68,6 +72,24 @@ class RegistrationController extends AbstractController
 			$entityManager->persist($user);
 			$entityManager->flush();
 
+            $signatureComponents = $verifyEmailHelper->generateSignature(
+                'app_verify_email',
+                $user->getId(),
+                $user->getEmail(),
+                ['id' => $user->getId()]
+            );
+
+            $email = (new TemplatedEmail())
+                ->from('damien.lolz.destructor@gmail.com')
+                ->to($user->getEmail())
+                ->subject('Welcome to VideoTube !')
+                ->htmlTemplate('email/welcome.html.twig')
+                ->context([
+                    'user' => $user,
+                    'signatureLink' => $signatureComponents->getSignedUrl(),
+                ]);
+            $mailer->send($email);
+
             return $this->redirectToRoute('app_prof_show', [
 				'image' => "",
 				'user' => $user,
@@ -85,6 +107,32 @@ class RegistrationController extends AbstractController
 			'connectee' => false
 		]);
     }
+
+    #[Route("/verify", name:"app_verify_email")]
+    public function verifyUserEmail(EntityManagerInterface $entityManager, Request $request, VerifyEmailHelperInterface $verifyEmailHelper, UserRepository $userRepository): Response
+    {
+        $user = $userRepository->find($request->query->get('id'));
+        if (!$user) {
+            throw $this->createNotFoundException();
+        }
+
+        try {
+            $verifyEmailHelper->validateEmailConfirmation(
+                $request->getUri(),
+                $user->getId(),
+                $user->getEmail(),
+            );
+        } catch (VerifyEmailExceptionInterface $e) {
+            $this->addFlash('danger', $e->getReason());
+            return $this->redirectToRoute('app_register');
+        }
+
+        $user->setIsVerified(true);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Your account is now verified !');
+        return $this->redirectToRoute('app_prof_show');
+    }
 	
 	#[Route('/profile', name: 'app_prof_show')]
 	public function show_prof(SessionInterface $session, CommentsRepository $commentRepository, Request $request, EntityManagerInterface $entityManager, AuthenticationUtils $authenticationUtils, VideosRepository $videoRepository, string $slug = null)
@@ -99,9 +147,8 @@ class RegistrationController extends AbstractController
 		else{
 			$connectee = false;
 		}
-		
-		$genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
-        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($username->getId(),$username->getId());
+
+        $queryBuilder = $videoRepository->createOrderedByQueryBuilder(null,$username);
         $adapter = new QueryAdapter($queryBuilder);
         $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
             $adapter,
@@ -122,12 +169,8 @@ class RegistrationController extends AbstractController
 		foreach($pagerfantacomment as $comms){
 			$numbers[] = $username->getPfpName();
 		}
-		
-		$defaultData = ['message' => 'Type your message here'];
-        $formSearch = $this->createFormBuilder($defaultData)
-            ->add('search', TextType::class)
-            
-            ->getForm();
+
+        $formSearch = $this->createForm(SearchType::class);
 
         $formSearch->handleRequest($request);
 
@@ -166,17 +209,10 @@ class RegistrationController extends AbstractController
 			return $this->redirectToRoute('app_prof_show');
 		}
 		
-		if($username != ''){
-			$connectee = true;
-		}
-		else{
-			$connectee = false;
-		}
-		
 		$utilisateur = $entityManager->getRepository(User::class)->find($id);
 		
 		$genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
-        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($slug, $id);
+        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($slug, $utilisateur);
         $adapter = new QueryAdapter($queryBuilder);
         $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
             $adapter,
@@ -197,12 +233,8 @@ class RegistrationController extends AbstractController
 		foreach($pagerfantacomment as $comms){
 			$numbers[] = $utilisateur->getPfpName();
 		}
-		
-		$defaultData = ['message' => 'Type your message here'];
-        $formSearch = $this->createFormBuilder($defaultData)
-            ->add('search', TextType::class)
-            
-            ->getForm();
+
+        $formSearch = $this->createForm(SearchType::class);
 
         $formSearch->handleRequest($request);
 
@@ -225,7 +257,6 @@ class RegistrationController extends AbstractController
 			'pfpName' => $username->getPfpName(),
 			'pfpNameOther' => $utilisateur->getPfpName(),
 			'etat' => 'connectee',
-			'connectee' => $connectee,
 			'pager' => $pagerfanta,
 			'pagercomment' => $pagerfantacomment,
 		]);
@@ -237,12 +268,8 @@ class RegistrationController extends AbstractController
 		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 		
 		$username = $this->getUser();
-		
-		$defaultData = ['message' => 'Type your message here'];
-        $formSearch = $this->createFormBuilder($defaultData)
-            ->add('search', TextType::class)
-            
-            ->getForm();
+
+        $formSearch = $this->createForm(SearchType::class);
 
         $formSearch->handleRequest($request);
 

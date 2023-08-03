@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Form\SearchType;
 use App\Repository\UserRepository;
 use App\Entity\User;
 use App\Form\LoginType;
@@ -29,19 +30,16 @@ class LoginController extends AbstractController
 
 		// last username entered by the user
 		$lastUsername = $authenticationUtils->getLastUsername();
-		
-		$defaultData = ['message' => 'Type your message here'];
-        $formSearch = $this->createFormBuilder($defaultData)
-            ->add('search', TextType::class)
-            
-            ->getForm();
+
+        $formSearch = $this->createForm(SearchType::class);
 
         $formSearch->handleRequest($request);
 
         if ($formSearch->isSubmitted() && $formSearch->isValid()) {
             // data is an array with "name", "email", and "message" keys
             $data = $formSearch->getData();
-			return $this->redirectToRoute('app_search', [
+
+			return $this->redirectToRoute('app_check_isVerified', [
 				'dataSearch' => $data,
 				'formSearch' => $formSearch,
 				'pfpName' => $username->getPfpName(),

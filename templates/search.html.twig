@@ -9,15 +9,15 @@
 			{% if is_granted('IS_AUTHENTICATED_FULLY') %}
 				<div class="row" style="margin-top:30px;">
 				{% if nbUsers != 0 %}
-					<div class="col-md-12 mixed-vinyl-container p-3" style="border-radius:50px;">
+					<div class="col-md-12 p-3" style="background-color:#222f36;border:solid 5px #17242c;border-radius:50px;margin-bottom:30px;">
 						<h3 style="text-align:center;">Users</h3>
 						<div class="row" style="margin-bottom:25px;border-radius:25px;">
 						{% for user in pageruser %}
 								<div class="col col-md-4">
-									<a href="/profile/{{ user.Id }}">
-										<div class="mixed-vinyl-container p-3 text-center" style="background-color:#17242c;height:90%;">
+									<a href="/profile/{{ user.id }}">
+										<div class="p-3 text-center" style="background-color:#17242c;margin-bottom:20px;border-radius:25px;">
 											{% if user.PfpName == '' %}
-												<i class="fas fa-user-astronaut p-2" style="color:grey;border: solid 2px grey; border-radius: 50px; font-size: 50px;"></i>
+												<i class="fas fa-user-astronaut p-4" style="color:grey;border: solid 2px grey; border-radius: 100px; font-size: 100px;"></i>
 											{% else %}
 												<img src="/pfp/{{ user.PfpName }}" style="width:40%;border-radius:50%;object-fit:cover;">
 											{% endif %}
@@ -31,13 +31,13 @@
 					</div>
 				{% endif %}
 				{% if nbVideos != 0 %}
-					<div class="col-md-12 mixed-vinyl-container p-3" style="border:solid 5px #17242c;border-radius:50px;">
+					<div class="col-md-12 p-3" style="background-color:#222f36;border:solid 5px #17242c;border-radius:50px;margin-bottom:30px;">
 						<h3 style="text-align:center;">Recent videos</h3>
 							<div class="row">
 								{% for video in pagervideo %}
 									<div class="col col-md-4">
 										<a href="{{ path('app_video_show', {slug: video.slug}) }}">
-											<div class="mixed-vinyl-container p-3 text-center" style="background-color:#17242c;">
+											<div class="p-3 text-center" style="background-color:#17242c;margin-bottom:20px;border-radius:25px;">
 												<img src="/vid/thumbnail/{{ video.getThumbnail() }}" alt="video album cover" style="background-color:black;width:360px;height:192px;object-fit:scale-down;">
 												<p class="mt-2"><strong>{{ video.nom }}</strong></p>
 												<span style="text-transform:capitalize;">{{ video.genre }}</span>
@@ -51,24 +51,24 @@
 					</div>
 				{% endif %}
 				{% if nbComments != 0 %}
-					<div class="col-md-12 mixed-vinyl-container p-3" style="border-radius:50px;">
+					<div class="col-md-12 p-3" style="background-color:#222f36;border:solid 5px #17242c;border-radius:50px;margin-bottom:30px;">
 						<h3 style="text-align:center;">Recent comments</h3>
 							{% for comment in pagercomment %}
 								<div class="row" style="margin:0px 10px 25px;background-color:#17242c;border-radius:25px;">
 									<div class="col col-md-1" style="text-align:center;">
-										<a href="/profile/{{ comment.uploaderComment }}">
-											{% if numbers[loop.index0] == '' %}
+										<a href="/profile/{{ comment.user.id }}">
+											{% if comment.user.pfpName == '' %}
 												<i class="fas fa-user-astronaut p-2" style="color:grey;border: solid 2px grey; border-radius: 50px; font-size: 50px;margin-top:13px;"></i>
 											{% else %}
-												<img src="/pfp/{{ numbers[loop.index0] }}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;margin-top:13px;">
+												<img src="/pfp/{{ comment.user.pfpName }}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;margin-top:13px;">
 											{% endif %}
 											<br>
 										</a>
 									</div>
 									<div class="col col-md-11">
 										<div>
-											<a href="/profile/{{ comment.uploaderComment }}">
-												<h6 style="margin-top:5px;"><strong>{{ comment.userNameComment }}</strong></h6>
+											<a href="/profile/{{ comment.user.id }}">
+												<h6 style="margin-top:5px;"><strong>{{ comment.user.username }}</strong></h6>
 											</a>
 											<p class="mt-2"><strong>{{ comment.contentComment }}</strong><br><span>{{ comment.createdAt|ago }}</span></p>
 										</div>

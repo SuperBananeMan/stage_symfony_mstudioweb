@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Form\SearchType;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use App\Repository\UserRepository;
 use App\Repository\CommentsRepository;
@@ -41,27 +42,21 @@ class VideoController extends AbstractController
     )
     {}
 	
-	#[Route('/browse/{slug?}', name: 'app_browse')]
-	public function browse(SessionInterface $session, VideosRepository $videoRepository, Request $request, string $slug = null, AuthenticationUtils $authenticationUtils): Response
+	#[Route('/browse/{genre?}', name: 'app_browse')]
+	public function browse(SessionInterface $session, VideosRepository $videoRepository, Request $request, User $username = null, string $genre = null, AuthenticationUtils $authenticationUtils): Response
     {
 		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
-		
-		$username = $this->getUser();
-		
-        $genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
-        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($slug, $username->getId());
+
+        //$genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
+        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($genre, $username);
         $adapter = new QueryAdapter($queryBuilder);
         $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
             $adapter,
             $request->query->get('page', 1),
             9
         );
-		
-		$defaultData = ['message' => 'Type your message here'];
-        $formSearch = $this->createFormBuilder($defaultData)
-            ->add('search', TextType::class)
-            
-            ->getForm();
+
+        $formSearch = $this->createForm(SearchType::class);
 
         $formSearch->handleRequest($request);
 
@@ -71,16 +66,49 @@ class VideoController extends AbstractController
 			return $this->redirectToRoute('app_search', [
 				'dataSearch' => $data,
 				'formSearch' => $formSearch,
-				'pfpName' => $username->getPfpName(),
 			]);
         }
+
 		
         return $this->render('vinyl/browse.html.twig', [
-			'formSearch' => $formSearch,
-			'pfpName' => $username->getPfpName(),
-			'user' => $username->getId(),
+            'formSearch' => $formSearch,
 			'genre' => $genre,
             'pager' => $pagerfanta,
+        ]);
+    }
+
+    #[Route('/myvideos/{genre?}', name: 'app_browse_myvideos')]
+    public function myVideos(Request $request, VideosRepository $videoRepository, string $genre = null): Response
+    {
+        $formSearch = $this->createForm(SearchType::class);
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+            return $this->redirectToRoute('app_search', [
+                'dataSearch' => $data,
+                'formSearch' => $formSearch,
+            ]);
+        }
+
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $username = $this->getUser();
+
+        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($genre, $username);
+        $adapter = new QueryAdapter($queryBuilder);
+        $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
+            $adapter,
+            $request->query->get('page', 1),
+            9
+        );
+
+        return $this->render('vinyl/browsemyvideos.html.twig', [
+            'genre' => $genre,
+            'pager' => $pagerfanta,
+            'formSearch' => $formSearch,
         ]);
     }
 	
@@ -90,12 +118,13 @@ class VideoController extends AbstractController
 		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 		
 		$username = $this->getUser();
-		
-		$defaultData = ['message' => 'Type your message here'];
-        $formSearch = $this->createFormBuilder($defaultData)
-            ->add('search', TextType::class)
-            
-            ->getForm();
+
+        if($username->isIsVerified() == false){
+            $this->addFlash('danger', 'Please verify your account via the link sent to your email.');
+            return $this->redirectToRoute('app_prof_show');
+        }
+
+        $formSearch = $this->createForm(SearchType::class);
 
         $formSearch->handleRequest($request);
 
@@ -110,17 +139,7 @@ class VideoController extends AbstractController
         }
 		
 		$video = new Videos();
-		$video->setNom('');
-		$video->setTitle('');
-		$video->setDescription('');
-		$video->setGenre('');
-		$video->setVideoFile();
-		$video->setVideoName('');
-		$video->setVideoSize(0);
-		
-		// $up = $session->get('username');
-		// $up = $repository->findOneBy(['username' => $up]);
-		$video->setUploader($username->getId());//$up->getId()
+        $video->setUser($username);
 
         $form = $this->createForm(VideoType::class, $video);
 		
@@ -148,7 +167,6 @@ class VideoController extends AbstractController
 		
 		return $this->render('video/videoaddForm.html.twig', [
 			'formSearch' => $formSearch,
-			'pfpName' => $username->getPfpName(),
 			'form2' => $form,
 		]);
 	}
@@ -159,12 +177,8 @@ class VideoController extends AbstractController
 		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 		
 		$username = $this->getUser();
-		
-		$defaultData = ['message' => 'Type your message here'];
-        $formSearch = $this->createFormBuilder($defaultData)
-            ->add('search', TextType::class)
-            
-            ->getForm();
+
+        $formSearch = $this->createForm(SearchType::class);
 
         $formSearch->handleRequest($request);
 
@@ -174,13 +188,11 @@ class VideoController extends AbstractController
 			return $this->redirectToRoute('app_search', [
 				'dataSearch' => $data,
 				'formSearch' => $formSearch,
-				'pfpName' => $username->getPfpName(),
 			]);
         }
 		
 		return $this->render('video/videoadd.html.twig', [
 			'formSearch' => $formSearch,
-			'pfpName' => $username->getPfpName(),
 			'video' => $video,
 		]);
     }
@@ -191,12 +203,8 @@ class VideoController extends AbstractController
 		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 		
 		$username = $this->getUser();
-		
-		$defaultData = ['message' => 'Type your message here'];
-        $formSearch = $this->createFormBuilder($defaultData)
-            ->add('search', TextType::class)
-            
-            ->getForm();
+
+        $formSearch = $this->createForm(SearchType::class);
 
         $formSearch->handleRequest($request);
 
@@ -211,12 +219,8 @@ class VideoController extends AbstractController
         }
 		
 		$comment = new Comments();
-		$comment->setUserNameComment($username->getUsername());
-		$comment->setContentComment('');
-		
-		$comment->setUploaderComment($username->getId());
-		
-		$comment->setVideoComment($video->getId());
+        $comment->setUser($username);
+        $comment->setVideo($video);
 		
 		$formcom = $this->createForm(CommentType::class, $comment);
 		
@@ -252,22 +256,9 @@ class VideoController extends AbstractController
             $request->query->get('page', 1),
             10
         );
-		
-		$numbers = array();
-		
-		foreach($pagerfanta as $comms){
-			$numbers[] = $repository->find($comms->getUploaderComment())->getPfpName();
-		}
-		
-		$creator = $repository->find($video->getUploader());
 
         return $this->render('video/show.html.twig', [
-			'uploaderId' => $creator->getId(),
-			'uploaderPfpName' => $creator->getPfpName(),
-			'uploaderUsername' => $creator->getUsername(),
 			'formSearch' => $formSearch,
-			'pfpName' => $username->getPfpName(),
-			'numbers' => $numbers,
 			'formcom' => $formcom,
 			'video' => $video,
 			'pager' => $pagerfanta,

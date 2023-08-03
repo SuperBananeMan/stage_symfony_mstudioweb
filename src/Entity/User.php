@@ -2,6 +2,9 @@
 
 namespace App\Entity;
 
+
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\File\File;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use Gedmo\Mapping\Annotation\Slug;
@@ -24,7 +27,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 	
 	#[ORM\Column(length: 180, unique: true)]
-    private ?string $username = null;
+                                        private ?string $username = null;
 	
     #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
@@ -39,24 +42,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $password = null;
 	
 	#[Assert\File(
-        maxSize: '1000m',
-        extensions: [
-			'jpg',
-			'jpeg',
-			'png'
-		],
-        extensionsMessage: 'Please upload a valid image file.',
-    )]
-	#[Vich\UploadableField(mapping: 'pfp', fileNameProperty: 'pfpName')]
-    private ?File $pfp = null;
+                                                     maxSize: '1000m',
+                                                     extensions: [
+                                             			'jpg',
+                                             			'jpeg',
+                                             			'png'
+                                             		],
+                                                     extensionsMessage: 'Please upload a valid image file.',
+                                                 )]
+                                             	#[Vich\UploadableField(mapping: 'pfp', fileNameProperty: 'pfpName')]
+                                                 private ?File $pfp = null;
 	
 	#[ORM\Column(length: 255, nullable: true)]
-    private ?string $pfpName = null;
+                                                 private ?string $pfpName = null;
+
+    #[ORM\Column]
+    private ?bool $isVerified = false;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Videos::class)]
+    private Collection $videos;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Comments::class)]
+    private Collection $comments;
 	
 	public function __construct()
-    {
-        $this->createdAt = new \DateTimeImmutable();
-    }
+                                                 {
+                                                     $this->createdAt = new \DateTimeImmutable();
+                                                     $this->videos = new ArrayCollection();
+                                                     $this->comments = new ArrayCollection();
+                                                 }
 	
     public function getId(): ?int
     {
@@ -64,9 +78,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 	
 	public function getUsername(): ?string
-    {
-        return $this->username;
-    }
+                                                 {
+                                                     return $this->username;
+                                                 }
 
     public function setUsername(string $username): static
     {
@@ -157,9 +171,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 	
 	public function getPfpName(): ?string
-    {
-        return $this->pfpName;
-    }
+                                                 {
+                                                     return $this->pfpName;
+                                                 }
 
     public function setPfpName(?string $pfpName): void
     {
@@ -173,5 +187,77 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    public function isIsVerified(): ?bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): static
+    {
+        $this->isVerified = $isVerified;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Videos>
+     */
+    public function getVideos(): Collection
+    {
+        return $this->videos;
+    }
+
+    public function addVideo(Videos $video): static
+    {
+        if (!$this->videos->contains($video)) {
+            $this->videos->add($video);
+            $video->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVideo(Videos $video): static
+    {
+        if ($this->videos->removeElement($video)) {
+            // set the owning side to null (unless already changed)
+            if ($video->getUser() === $this) {
+                $video->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Comments>
+     */
+    public function getComments(): Collection
+    {
+        return $this->comments;
+    }
+
+    public function addComment(Comments $comment): static
+    {
+        if (!$this->comments->contains($comment)) {
+            $this->comments->add($comment);
+            $comment->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeComment(Comments $comment): static
+    {
+        if ($this->comments->removeElement($comment)) {
+            // set the owning side to null (unless already changed)
+            if ($comment->getUser() === $this) {
+                $comment->setUser(null);
+            }
+        }
+
+        return $this;
     }
 }

@@ -49,6 +49,18 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         }
 		return $queryBuilder;
     }
+
+    /*public function userTakerUploader(string $search = null)
+    {
+        $queryBuilder = $this->addOrderByQueryBuilderUser();
+
+        if ($search) {
+            $queryBuilder   ->join('', '')
+                            ->andWhere('user.username LIKE :searchTerm')
+                            ->setParameter('searchTerm', '%'.$search.'%');
+        }
+        return $queryBuilder;
+    }*/
 	
 	private function addOrderByQueryBuilderUser(QueryBuilder $queryBuilder = null)
     {

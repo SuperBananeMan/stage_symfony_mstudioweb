@@ -1,0 +1,214 @@
+
+a {
+	text-decoration:none;
+}
+figure {
+	max-width:1024px;
+	max-width:64rem;
+	width:100%;
+	height:100%;
+	max-height:494px;
+	max-height:30.875rem;
+}
+figcaption {
+	display:block;
+	font-size:12px;
+	font-size:0.75rem;
+	color:#fff;
+}
+video {
+	width:100%;
+}
+
+/* controls */
+.controls, .controls > * {
+	padding:0;
+	margin:0;
+}
+.controls {
+	overflow:hidden;
+	background:transparent;
+	width:100%;
+	height:8.0971659919028340080971659919028%; /* of figure's height */
+	position:relative;
+}
+.controls[data-state=hidden] {
+	display:none;
+}
+.controls[data-state=visible] {
+	display:block;
+}
+.controls > * {
+	float:left;
+	width:3.90625%;
+	height:100%;
+	margin-left:0.1953125%;
+	display:block;
+}
+.controls > *:first-child {
+	margin-left:0;
+}
+.controls .progress {
+	cursor:pointer;
+	width:75.390625%;
+}
+.controls button {
+	text-align:center;
+	overflow:hidden;
+	white-space:nowrap;
+  	text-overflow:ellipsis;
+  	border:none;
+  	cursor:pointer;
+  	text-indent:-99999px;
+  	background:transparent;
+  	background-size:contain;
+  	background-repeat:no-repeat;
+}
+.controls button:hover, .controls button:focus {
+	opacity:0.5;
+}
+.controls button[data-state="play"] {
+	background-image: url('video_ui/play.png');
+}
+.controls button[data-state="pause"] {
+	background-image: url('video_ui/pause.png');
+}
+.controls button[data-state="stop"] {
+	background-image: url('video_ui/stop.png');
+}
+.controls button[data-state="mute"] {
+	background-image: url('video_ui/unmute.png');
+}
+.controls button[data-state="unmute"] {
+	background-image: url('video_ui/mute.png');
+}
+.controls button[data-state="volup"] {
+	background-image: url('video_ui/up.png');
+}
+.controls button[data-state="voldown"] {
+	background-image: url('video_ui/down.png');
+}
+.controls button[data-state="go-fullscreen"] {
+	background-image: url('video_ui/full.png');
+}
+.controls button[data-state="cancel-fullscreen"] {
+	background-image: url('video_ui/small.png');
+}
+.controls progress {
+	display:block;
+	width:100%;
+	height:100%;
+	border:none;
+	overflow:hidden;
+	-moz-border-radius:2px;
+	-webkit-border-radius:2px;
+	border-radius:2px;
+	color:#0095dd; /* Internet Explorer uses this value as the progress bar's value colour */
+}
+.controls progress[data-state="fake"] {
+	background:#e6e6e6;
+}
+.controls progress span {
+	width:0%;
+	height:100%;
+	display:inline-block;
+	background-color:#2a84cd;	
+}
+
+.controls progress::-moz-progress-bar {
+	background-color:#0095dd;
+}
+/* Chrome requires its own rule for this, otherwise it ignores it */
+.controls progress::-webkit-progress-value {
+	background-color:#0095dd;
+}
+
+/* fullscreen */
+html:-ms-fullscreen {
+	width:100%;
+}
+:-webkit-full-screen {
+	background-color:transparent;
+}
+video:-webkit-full-screen + .controls {
+	background:#ccc; /* required for Chrome which doesn't heed the transparent value set above */
+}
+video:-webkit-full-screen + .controls progress {
+	margin-top:0.5rem;
+}
+
+/* hide controls on fullscreen with WebKit */
+figure[data-fullscreen=true] video::-webkit-media-controls {
+	display:none !important;
+}
+figure[data-fullscreen=true] {
+	max-width:100%;
+	width:100%;
+	margin:0;
+	padding:0;
+	max-height:100%;
+}
+figure[data-fullscreen=true] video {
+	height:auto;
+}
+figure[data-fullscreen=true] figcaption {
+	display:none;
+}
+figure[data-fullscreen=true] .controls {
+	position:absolute;
+	bottom:2%;
+	width:100%;
+	z-index:2147483647;
+}
+figure[data-fullscreen=true] .controls li {
+	width:5%;
+}
+figure[data-fullscreen=true] .controls .progress {
+	width:68%;
+}
+
+/* Media Queries */
+@media screen and (max-width:1024px) {
+	figure {
+		padding-left:0;
+		padding-right:0;
+		height:auto;
+	}
+	.controls {
+		/* we want the buttons to be proportionally bigger, so give their parent a set height */
+		height:30px;
+		height:1.876rem;
+	}
+}
+@media screen and (max-width:42.5em) {
+	.controls {
+		height:auto;
+	}
+	.controls > * {
+		display:block;
+		width:16.6667%;
+		margin-left:0;
+		height:40px;
+		height:2.5rem;
+		margin-top:2.5rem;
+	}
+	.controls .progress {
+		/*display:table-caption;*/ /* this trick doesn't work as elements are floated and the layout doesn't work */
+		position:absolute;
+		top:0;
+		width:100%;
+		float:none;
+		margin-top:0;
+	}
+	.controls .progress progress {
+		width:98%;
+		margin:0 auto;
+	}
+	.controls button {
+		background-position:center center;
+	}
+	figcaption {
+		text-align:center;
+		margin-top:0.5rem;
+	}
+}

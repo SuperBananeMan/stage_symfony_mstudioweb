@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\File\File;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use Gedmo\Mapping\Annotation\Slug;
@@ -15,46 +17,46 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[Vich\Uploadable]
 class Videos
 {
-	use TimestampableEntity;
-	
+    use TimestampableEntity;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column()]
     private ?int $id = null;
-	
-	#[ORM\Column(length: 255)]
+
+    #[ORM\Column(length: 255)]
     private ?string $nom = null;
-	
+
     #[ORM\Column(length: 255)]
     private ?string $title = null;
-	
-	#[ORM\Column(type: Types::TEXT, nullable:true)]
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
-	
-	#[ORM\Column(length: 255)]
+
+    #[ORM\Column(length: 255)]
     private ?string $genre = null;
-	
-	#[ORM\Column(length: 255)]
+
+    #[ORM\Column(length: 255)]
     private ?string $thumbnail = null;
-	
+
     #[ORM\Column(type: Types::TIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $duree = null;
-	
-	#[ORM\Column(length: 150, unique: true)]
-	#[Slug(fields: ['title'])]
+
+    #[ORM\Column(length: 150, unique: true)]
+    #[Slug(fields: ['title'])]
     private ?string $slug = null;
-	
-	#[Assert\File(
+
+    #[Assert\File(
         maxSize: '1000m',
         extensions: [
-			'mp4',
-			'mp3',
-			'mov',
-			'webm'
-		],
+            'mp4',
+            'mp3',
+            'mov',
+            'webm'
+        ],
         extensionsMessage: 'Please upload a valid video or mp3 file.',
     )]
-	// NOTE: This is not a mapped field of entity metadata, just a simple property.
+    // NOTE: This is not a mapped field of entity metadata, just a simple property.
     #[Vich\UploadableField(mapping: 'videos', fileNameProperty: 'videoName', size: 'videoSize')]
     private ?File $videoFile = null;
 
@@ -63,21 +65,26 @@ class Videos
 
     #[ORM\Column(nullable: true)]
     private ?int $videoSize = null;
-	
-	#[ORM\Column(length: 255)]
-    private ?int $uploader = null;
-	
-	public function __construct()
+
+    #[ORM\ManyToOne(inversedBy: 'videos')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $user = null;
+
+    #[ORM\OneToMany(mappedBy: 'video', targetEntity: Comments::class)]
+    private Collection $comments;
+
+    public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
+        $this->comments = new ArrayCollection();
     }
-	
+
     public function getId(): ?int
     {
         return $this->id;
     }
-	
-	public function getNom(): ?string
+
+    public function getNom(): ?string
     {
         return $this->nom;
     }
@@ -88,7 +95,7 @@ class Videos
 
         return $this;
     }
-	
+
     public function getTitle(): ?string
     {
         return $this->title;
@@ -100,8 +107,8 @@ class Videos
 
         return $this;
     }
-	
-	public function getDescription(): ?string
+
+    public function getDescription(): ?string
     {
         return $this->description;
     }
@@ -112,8 +119,8 @@ class Videos
 
         return $this;
     }
-	
-	public function getGenre(): ?string
+
+    public function getGenre(): ?string
     {
         return $this->genre;
     }
@@ -124,8 +131,8 @@ class Videos
 
         return $this;
     }
-	
-	public function getThumbnail(): ?string
+
+    public function getThumbnail(): ?string
     {
         return $this->thumbnail;
     }
@@ -148,8 +155,8 @@ class Videos
 
         return $this;
     }
-	
-	public function getSlug(): ?string
+
+    public function getSlug(): ?string
     {
         return $this->slug;
     }
@@ -160,8 +167,8 @@ class Videos
 
         return $this;
     }
-	
-	/**
+
+    /**
      * If manually uploading a file (i.e. not using Symfony Form) ensure an instance
      * of 'UploadedFile' is injected into this setter to trigger the update. If this
      * bundle's configuration parameter 'inject_on_load' is set to 'true' this setter
@@ -205,14 +212,46 @@ class Videos
     {
         return $this->videoSize;
     }
-	
-	public function setUploader(?int $uploader): void
+
+    public function getUser(): ?User
     {
-        $this->uploader = $uploader;
+        return $this->user;
     }
 
-    public function getUploader(): ?int
+    public function setUser(?User $user): static
     {
-        return $this->uploader;
+        $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Comments>
+     */
+    public function getComments(): Collection
+    {
+        return $this->comments;
+    }
+
+    public function addComment(Comments $comment): static
+    {
+        if (!$this->comments->contains($comment)) {
+            $this->comments->add($comment);
+            $comment->setVideo($this);
+        }
+
+        return $this;
+    }
+
+    public function removeComment(Comments $comment): static
+    {
+        if ($this->comments->removeElement($comment)) {
+            // set the owning side to null (unless already changed)
+            if ($comment->getVideo() === $this) {
+                $comment->setVideo(null);
+            }
+        }
+
+        return $this;
     }
 }

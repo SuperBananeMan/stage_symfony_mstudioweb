@@ -2,6 +2,7 @@
 
 namespace App\Form;
 
+use App\Entity\Lead;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -14,8 +15,10 @@ class ContactType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('name', TextType::class)
+            ->add('surname', TextType::class)
             ->add('subject', TextType::class)
-			->add('text', TextareaType::class)
+            ->add('content', TextareaType::class)
             ->add('submit', SubmitType::class)
         ;
     }
@@ -23,7 +26,7 @@ class ContactType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            // Configure your form options here
+            'data_class' => Lead::class,
         ]);
     }
 }

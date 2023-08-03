@@ -6,8 +6,8 @@
     <div class="container">
         <h1 class="d-inline me-3">{{ video.nom }}</h1>
         <div class="row mt-5">
-			<div class="col-12 col-md-12">
-				<link rel="stylesheet" href="/build/videoplayer.css" />
+			<div class="col-12 col-md-12" style="margin-bottom:30px;">
+				<link rel="stylesheet" href="/assets/styles/videoplayer.css" />
 				<figure id="videoContainer" data-fullscreen="false">
 					<video id="video" class="video-js vjs-theme-city" width="800" height="500" controls preload="metadata">
 						<source src="/vid/{{ video.videoName }}" type="video/mp4">
@@ -36,16 +36,16 @@
 						<button id="fs" type="button" data-state="go-fullscreen"></button>
 					</div>
 				</figure>
-				<script src="/build/videoplayer.js"></script>
+				<script src="/assets/videoplayer.js"></script>
             </div>
             <div class="col-md-12" style="margin-top:10px;">
-				<a href="/profile/{{ uploaderId }}">
-					{% if uploaderPfpName == '' %}
+				<a href="{{ path('app_prof_show_other', { 'id': video.user.id }) }}">
+					{% if video.user.pfpName == '' %}
 						<i class="fas fa-user-astronaut p-2" style="color:grey;border: solid 2px grey; border-radius: 50px; font-size: 50px;"></i>
 					{% else %}
-						<img src="/pfp/{{ uploaderPfpName }}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;">
+						<img src="{{ asset('pfp/'~video.user.pfpName) }}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;">
 					{% endif %}
-					<strong>{{ uploaderUsername }}</strong>
+					<strong>{{ video.user.username }}</strong>
 				</a>
                 <div>
 					<p>{{ video.description }}</p>
@@ -56,20 +56,19 @@
 					{{ form(formcom) }}
 				{% endif %}
 				{% for comment in pager %}
-					<div class="row" style="margin-bottom:25px;">
-						<div class="col col-md-1" style="text-align:center;">
-							<a href="/profile/{{ comment.uploaderComment }}">
-								{% if numbers[loop.index0] == '' %}
+					<div class="row" style="margin-bottom:25px;background-color:#222f36;border-radius:25px;">
+						<div class="col col-md-1" style="text-align:center;margin-top:10px;">
+							<a href="/profile/{{ comment.user.id }}">
+								{% if comment.user.pfpName == '' %}
 									<i class="fas fa-user-astronaut p-2" style="color:grey;border: solid 2px grey; border-radius: 50px; font-size: 50px;"></i>
 								{% else %}
-									<img src="/pfp/{{ numbers[loop.index0] }}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;">
+									<img src="/pfp/{{ comment.user.pfpName }}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;">
 								{% endif %}
-								<br>
-								<strong>{{ comment.userNameComment }}</strong>
 							</a>
 						</div>
 						<div class="col col-md-11">
-							<div class="mixed-vinyl-container">
+							<div>
+								<a href="/profile/{{ comment.user.id }}"><strong>{{ comment.user.username }}</strong></a>
 								<p class="mt-2"><strong>{{ comment.contentComment }}</strong><br><span>{{ comment.createdAt|ago }}</span></p>
 							</div>
 						</div>

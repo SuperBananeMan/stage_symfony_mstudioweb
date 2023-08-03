@@ -8,6 +8,7 @@
 		</div>
 		<div class="col-md-8">
 			<div>
+				{% include "_toasts.html.twig" %}
 				{% if etat == 'connection' %}
 					<h2>Se connecter</h2>
 					{% if error %}
