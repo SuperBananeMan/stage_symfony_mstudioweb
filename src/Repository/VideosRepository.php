@@ -23,8 +23,8 @@ class VideosRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Videos::class);
     }
-	
-	public function add(Videos $entity, bool $flush = false): void
+
+    public function add(Videos $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);
 
@@ -32,8 +32,8 @@ class VideosRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
-	
-	    public function remove(Videos $entity, bool $flush = false): void
+
+    public function remove(Videos $entity, bool $flush = false): void
     {
         $this->getEntityManager()->remove($entity);
 
@@ -48,12 +48,12 @@ class VideosRepository extends ServiceEntityRepository
         if ($genre) {
             $queryBuilder->andWhere('videos.genre = :genre')
                 ->setParameter('genre', $genre);
-		}
-        if ($user){
+        }
+        if ($user) {
             $queryBuilder->andWhere('videos.user = :user')
                 ->setParameter('user', $user);
         }
-		return $queryBuilder;
+        return $queryBuilder;
     }
 
     public function videoTakerAll(string $search = null)
@@ -61,17 +61,17 @@ class VideosRepository extends ServiceEntityRepository
         $queryBuilder = $this->addOrderByQueryBuilder();
 
         if ($search) {
-            $queryBuilder->andWhere('videos.nom LIKE :searchTerm')
-                ->setParameter('searchTerm', '%'.$search.'%');
-            $queryBuilder->orWhere('videos.description LIKE :searchTerm')
-                ->setParameter('searchTerm', '%'.$search.'%');
-//            $queryBuilder->orWhere('videos.user.username LIKE :searchTerm')
-//                ->setParameter('searchTerm', '%'.$search.'%');
+            $queryBuilder->orWhere('videos.nom LIKE :searchTerm')
+                ->orWhere('videos.description LIKE :searchTerm')
+                ->join('videos.user', 'u')
+                ->orWhere('u.username = :user')
+                ->setParameter('searchTerm', '%' . $search . '%')
+                ->setParameter('user',$search);
         }
         return $queryBuilder;
     }
-	
-	private function addOrderByQueryBuilder(QueryBuilder $queryBuilder = null): QueryBuilder
+
+    private function addOrderByQueryBuilder(QueryBuilder $queryBuilder = null): QueryBuilder
     {
         $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('videos');
 

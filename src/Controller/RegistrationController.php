@@ -91,20 +91,14 @@ class RegistrationController extends AbstractController
             $mailer->send($email);
 
             return $this->redirectToRoute('app_prof_show', [
-				'image' => "",
 				'user' => $user,
-				'pfpName' => '',
-				'etat' => 'inscrit',
-				'connectee' => true
 			]);
 		}
 		
 		return $this->render('profile/inscri_co.html.twig', [
 			'formSearch' => '',
-			'pfpName' => '',
 			'form' => $form,
-			'etat' => 'inscription',
-			'connectee' => false
+            'etat' => 'inscription',
 		]);
     }
 
@@ -152,7 +146,7 @@ class RegistrationController extends AbstractController
         $adapter = new QueryAdapter($queryBuilder);
         $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
             $adapter,
-            $request->query->get('', 1),
+            $request->query->get('page', 1),
             9
         );
 		
@@ -163,12 +157,6 @@ class RegistrationController extends AbstractController
             $request->query->get('page', 1),
 			10
         );
-		
-		$numbers = array();
-		
-		foreach($pagerfantacomment as $comms){
-			$numbers[] = $username->getPfpName();
-		}
 
         $formSearch = $this->createForm(SearchType::class);
 
@@ -180,19 +168,12 @@ class RegistrationController extends AbstractController
 			return $this->redirectToRoute('app_search', [
 				'dataSearch' => $data,
 				'formSearch' => $formSearch,
-				'pfpName' => $username->getPfpName(),
 			]);
         }
 		
 		return $this->render('profile/profile.html.twig', [
 			'formSearch' => $formSearch,
 			'ogUser' => true,
-			'numbers' => $numbers,
-			'userid' => $username->getId(),
-			'username' => $username->getUsername(),
-			'pfpName' => $username->getPfpName(),
-			'etat' => 'connectee',
-			'connectee' => $connectee,
 			'pager' => $pagerfanta,
 			'pagercomment' => $pagerfantacomment,
 		]);
@@ -227,12 +208,6 @@ class RegistrationController extends AbstractController
             $request->query->get('page', 1),
 			10
         );
-		
-		$numbers = array();
-		
-		foreach($pagerfantacomment as $comms){
-			$numbers[] = $utilisateur->getPfpName();
-		}
 
         $formSearch = $this->createForm(SearchType::class);
 
@@ -244,19 +219,15 @@ class RegistrationController extends AbstractController
 			return $this->redirectToRoute('app_search', [
 				'dataSearch' => $data,
 				'formSearch' => $formSearch,
-				'pfpName' => $username->getPfpName(),
 			]);
         }
 		
 		return $this->render('profile/profile.html.twig', [
 			'formSearch' => $formSearch,
 			'ogUser' => false,
-			'numbers' => $numbers,
 			'userid' => $utilisateur->getId(),
 			'username' => $utilisateur->getUsername(),
-			'pfpName' => $username->getPfpName(),
 			'pfpNameOther' => $utilisateur->getPfpName(),
-			'etat' => 'connectee',
 			'pager' => $pagerfanta,
 			'pagercomment' => $pagerfantacomment,
 		]);
@@ -278,7 +249,6 @@ class RegistrationController extends AbstractController
             $data = $formSearch->getData();
 			return $this->redirectToRoute('app_search', [
 				'formSearch' => $formSearch,
-				'pfpName' => $username->getPfpName(),
 			]);
         }
 		
@@ -308,20 +278,14 @@ class RegistrationController extends AbstractController
 			$filesystem->remove("C:/Users/damie/mixed_vinyl/public/pfp/{$saveOlfPfp}");
 			
 			return $this->redirectToRoute('app_prof_show', [
-				'pfpName' => $newpfpName,
 				'file' => $file,
 				'formpfp' => $formpfp,
-				'etat' => 'inscrit',
-				'connectee' => true
 			]);
 		}
 		
 		return $this->render('profile/pfpchange.html.twig', [
 			'formSearch' => $formSearch,
-			'pfpName' => $username->getPfpName(),
 			'formpfp' => $formpfp,
-			'etat' => 'connectee',
-			'connectee' => true
 		]);
 	}
 }

@@ -50,15 +50,6 @@ function shoot(){
 	var videoRating = document.querySelector('.js-video-rating');
     var videoNom = JSON.parse(videoRating.dataset.video);
 	
-	console.log(videoNom);
-	
-	var a = document.createElement('a');
-	a.href = `${videoNom}.png`;
-	a.download = `${videoNom}.png`;
-	document.body.appendChild(a);
-	a.click();
-	document.body.removeChild(a);
-	
 	/*var videoRating = document.querySelector('.js-video-rating');
     var videoNom = JSON.parse(videoRating.dataset.video);
 	

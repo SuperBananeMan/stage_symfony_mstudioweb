@@ -41,13 +41,11 @@ class VinylController extends AbstractController
 			return $this->redirectToRoute('app_search', [
 				'dataSearch' => $data,
 				'formSearch' => $formSearch,
-				'pfpName' => $username->getPfpName(),
 			]);
         }
 		
         return $this->render('vinyl/homepage.html.twig', [
 			'formSearch' => $formSearch,
-			'pfpName' => $username->getPfpName(),
         ]);
     }
 	
@@ -106,7 +104,6 @@ class VinylController extends AbstractController
 			return $this->redirectToRoute('app_search', [
 				'dataSearch' => $data,
 				'formSearch' => $formSearch,
-				'pfpName' => $username->getPfpName(),
 			]);
         }
 		
@@ -119,7 +116,6 @@ class VinylController extends AbstractController
 			'pagercomment' => $pagerfantacomment,
 			'pageruser' => $pagerfantauser,
 			'pagervideo' => $pagerfantavideo,
-			'pfpName' => $username->getPfpName(),
 		]);
 	}
 }

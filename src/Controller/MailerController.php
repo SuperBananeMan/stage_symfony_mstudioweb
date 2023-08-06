@@ -79,7 +79,6 @@ class MailerController extends AbstractController
         return $this->render('contact.html.twig', [
 			'formEmail' => $formEmail,
 			'formSearch' => $formSearch,
-			'pfpName' => $username->getPfpName(),
 		]);
     }
 }

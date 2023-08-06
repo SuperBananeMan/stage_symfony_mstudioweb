@@ -134,7 +134,6 @@ class VideoController extends AbstractController
 			return $this->redirectToRoute('app_search', [
 				'dataSearch' => $data,
 				'formSearch' => $formSearch,
-				'pfpName' => $username->getPfpName(),
 			]);
         }
 		
@@ -159,7 +158,6 @@ class VideoController extends AbstractController
 			
 			
 			return $this->redirectToRoute('app_video_new', [
-				'pfpName' => $username->getPfpName(),
 				'video' => $video,
 				'slug' => $video->getSlug(),
 			]);
@@ -214,7 +212,6 @@ class VideoController extends AbstractController
 			return $this->redirectToRoute('app_search', [
 				'dataSearch' => $data,
 				'formSearch' => $formSearch,
-				'pfpName' => $username->getPfpName(),
 			]);
         }
 		
@@ -242,7 +239,6 @@ class VideoController extends AbstractController
 			
 			
 			return $this->redirectToRoute('app_video_show', [
-				'pfpName' => $username->getPfpName(),
 				'slug' => $video->getSlug(),
 				'formcom' => $formcom,
 				'video' => $video,

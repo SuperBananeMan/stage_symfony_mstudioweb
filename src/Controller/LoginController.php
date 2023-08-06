@@ -42,17 +42,15 @@ class LoginController extends AbstractController
 			return $this->redirectToRoute('app_check_isVerified', [
 				'dataSearch' => $data,
 				'formSearch' => $formSearch,
-				'pfpName' => $username->getPfpName(),
 			]);
         }
 		
 		return $this->render('profile/inscri_co.html.twig', [
 			'formSearch' => $formSearch,
-			'pfpName' => '',
 			'controller_name' => 'LoginController',
-			'etat' => 'connection',
 			'last_username' => $lastUsername,
 			'error' => $error,
+            'etat' => 'connection',
 		]);
     }
 	
@@ -61,8 +59,6 @@ class LoginController extends AbstractController
         // you can also disable the csrf logout
         $response = $security->logout(false);
 		
-		return $this->redirectToRoute('app_prof_show', [
-			'connectee' => false
-		]);
+		return $this->redirectToRoute('app_prof_connect');
 	}
 }

@@ -56,7 +56,7 @@
 							{% for comment in pagercomment %}
 								<div class="row" style="margin:0px 10px 25px;background-color:#17242c;border-radius:25px;">
 									<div class="col col-md-1" style="text-align:center;">
-										<a href="/profile/{{ comment.user.id }}">
+										<a href="/video/{{ comment.video.slug }}">
 											{% if comment.user.pfpName == '' %}
 												<i class="fas fa-user-astronaut p-2" style="color:grey;border: solid 2px grey; border-radius: 50px; font-size: 50px;margin-top:13px;"></i>
 											{% else %}
@@ -67,7 +67,7 @@
 									</div>
 									<div class="col col-md-11">
 										<div>
-											<a href="/profile/{{ comment.user.id }}">
+											<a href="/video/{{ comment.video.slug }}">
 												<h6 style="margin-top:5px;"><strong>{{ comment.user.username }}</strong></h6>
 											</a>
 											<p class="mt-2"><strong>{{ comment.contentComment }}</strong><br><span>{{ comment.createdAt|ago }}</span></p>

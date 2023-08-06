@@ -20,39 +20,37 @@ class CommentsRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-		parent::__construct($registry, Comments::class);
+        parent::__construct($registry, Comments::class);
     }
 
     /**
      * @return VinylMix[] Returns an array of VinylMix objects
      */
-	 
+
     public function commentTaker(int $video = null)
     {
         $queryBuilder = $this->addOrderByQueryBuilder();
         if ($video) {
-			$queryBuilder
-				->andWhere('comments.video = :vid')
-				->setParameter('vid', $video)
-				->setMaxResults(10)
-				->getQuery()
-			;
-		}
-		return $queryBuilder;
+            $queryBuilder
+                ->andWhere('comments.video = :vid')
+                ->setParameter('vid', $video)
+                ->setMaxResults(10)
+                ->getQuery();
+        }
+        return $queryBuilder;
     }
-	
-	public function commentTakerByUser(int $userId = null)
+
+    public function commentTakerByUser(int $userId = null)
     {
         $queryBuilder = $this->addOrderByQueryBuilder();
         if ($userId) {
-			$queryBuilder
-				->andWhere('comments.user = :use')
-				->setParameter('use', $userId)
-				->setMaxResults(10)
-				->getQuery()
-			;
-		}
-		return $queryBuilder;
+            $queryBuilder
+                ->andWhere('comments.user = :use')
+                ->setParameter('use', $userId)
+                ->setMaxResults(10)
+                ->getQuery();
+        }
+        return $queryBuilder;
     }
 
     public function commentTakerAll(string $search = null)
@@ -61,14 +59,15 @@ class CommentsRepository extends ServiceEntityRepository
 
         if ($search) {
             $queryBuilder->andWhere('comments.content LIKE :searchTerm')
-                ->setParameter('searchTerm', '%'.$search.'%');
-//            $queryBuilder->orWhere('comments.user LIKE :searchTerm')
-//                ->setParameter('searchTerm', '%'.$search.'%');
+                ->setParameter('searchTerm', '%' . $search . '%')
+                ->join('comments.user', 'u')
+                ->orWhere('u.username = :user')
+                ->setParameter('user', $search);
         }
         return $queryBuilder;
     }
 
-	private function addOrderByQueryBuilder(QueryBuilder $queryBuilder = null): QueryBuilder
+    private function addOrderByQueryBuilder(QueryBuilder $queryBuilder = null): QueryBuilder
     {
         $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('comments');
 

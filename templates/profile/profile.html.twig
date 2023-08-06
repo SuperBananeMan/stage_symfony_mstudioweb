@@ -1,19 +1,125 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<div class="container">
-    {% if is_granted('IS_AUTHENTICATED_FULLY') %}
-        {% if ogUser == true %}
-            <div class="row">
+    <div class="container">
+        {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+            {% if ogUser == true %}
+                <div class="row">
+                    <div class="col-md-4">
+                        {% if app.user.pfpName == "" %}
+                            <div type="button" class="fas fa-user-astronaut p-5 zonehoverprofile"
+                                 style="border: solid 3px #fff; border-radius: 100px; font-size: 300px;"
+                                 data-bs-toggle="modal" data-bs-target="#popup"></div>
+                        {% else %}
+                            <div type="button" class="zonehoverprofile" style="border-radius: 50px;"
+                                 data-bs-toggle="modal"
+                                 data-bs-target="#popup">
+                                <img src="/pfp/{{ app.user.pfpName }}" alt="Your profile picture."
+                                     style="border-radius:50px;max-width:416px;">
+                            </div>
+                        {% endif %}
+                        <div id="popup" class="modal">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content"
+                                     style="background-color:#17242C;border:solid 5px #fff;border-radius: 10px;text-align:center;">
+                                    {% if app.user.pfpName == '' %}
+                                        <div class="fas fa-user-astronaut p-5" style="font-size: 300px;"></div>
+                                    {% else %}
+                                        <img src="/pfp/{{ app.user.pfpName }}" alt="Your profile picture."
+                                             style="border-radius:10px;max-width:100%;">
+                                    {% endif %}
+                                    <a class="btn btn-primary" href="{{ path('app_pfp_change') }}">Change your profile
+                                        picture</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div>
+                            <h1>Hello {{ app.user.username }}.</h1>
+                            <br>
+                            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                                <h2>Your current email is {{ app.user.email }}</h2>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <a class="btn btn-secondary" href="{{ path('app_prof_deconnect') }}"
+                           style="width:150px;margin-top:25px;margin-left:10px;">Sign Out</a>
+                    </div>
+                    {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                        <div class="row" style="margin-top:30px;">
+                            <div class="col-md-12 p-3"
+                                 style="background-color:#222f36;border:solid 5px #17242c;border-radius:50px;margin-bottom:30px;">
+                                <h3 style="text-align:center;">My videos</h3>
+                                <div class="row">
+                                    {% for video in pager %}
+                                        <div class="col col-md-4">
+                                            <div class="p-3 text-center"
+                                                 style="background-color:#17242c;border-radius:25px;margin-bottom:20px;">
+                                                <a href="{{ path('app_video_show', {slug: video.slug}) }}">
+                                                    <img src="/vid/thumbnail/{{ video.getThumbnail() }}"
+                                                         alt="video album cover"
+                                                         style="background-color:black;width:360px;height:192px;object-fit:scale-down;">
+                                                    <p class="mt-2"><strong>{{ video.nom }}</strong></p>
+                                                    <span style="text-transform:capitalize;">{{ video.genre }}</span>
+                                                    <br>
+                                                    <span>{{ video.createdAt|ago }}</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <h5>More of my videos : <a href="{{ path('app_browse_myvideos') }}">My videos</a>
+                                </h5>
+                            </div>
+                            <div class="col-md-12 p-3"
+                                 style="background-color:#222f36;border:solid 5px #17242c;border-radius:50px;">
+                                <h3 style="text-align:center;">My comments</h3>
+                                {% for comment in pagercomment %}
+                                    <div class="row"
+                                         style="margin: 0px 10px 25px;background-color:#17242c;border-radius:25px;">
+                                        <div class="col col-md-1" style="text-align:center;margin-top:10px;">
+                                            <a href="/profile">
+                                                {% if app.user.pfpName == '' %}
+                                                    <i class="fas fa-user-astronaut p-2"
+                                                       style="color:grey;border: solid 2px grey; border-radius: 50px; font-size: 50px;"></i>
+                                                {% else %}
+                                                    <img src="/pfp/{{ app.user.pfpName }}"
+                                                         style="width:70px;height:70px;border-radius:50%;object-fit:cover;">
+                                                {% endif %}
+                                            </a>
+                                        </div>
+                                        <div class="col col-md-11">
+                                            <div>
+                                                <a href="/profile"><strong>{{ comment.user.username }}</strong></a>
+                                                <p class="mt-2">
+                                                    <strong>{{ comment.contentComment }}</strong><br><span>{{ comment.createdAt|ago }}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                {{ pagerfanta(pagercomment) }}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+
+
+            {% else %}
+                <div class="row">
                 <div class="col-md-4">
-                    {% if pfpName == "" %}
+                    {% if pfpNameOther == "" %}
                         <div type="button" class="fas fa-user-astronaut p-5 zonehoverprofile"
                              style="border: solid 3px #fff; border-radius: 100px; font-size: 300px;"
-                             data-bs-toggle="modal" data-bs-target="#popup"></div>
+                             data-bs-toggle="modal"
+                             data-bs-target="#popup"></div>
                     {% else %}
                         <div type="button" class="zonehoverprofile" style="border-radius: 50px;" data-bs-toggle="modal"
                              data-bs-target="#popup">
-                            <img src="/pfp/{{ pfpName }}" alt="Your profile picture."
+                            <img src="/pfp/{{ pfpNameOther }}" alt="Your profile picture."
                                  style="border-radius:50px;max-width:416px;">
                         </div>
                     {% endif %}
@@ -21,77 +127,72 @@
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content"
                                  style="background-color:#17242C;border:solid 5px #fff;border-radius: 10px;text-align:center;">
-                                {% if pfpName == '' %}
+                                {% if pfpNameOther == '' %}
                                     <div class="fas fa-user-astronaut p-5" style="font-size: 300px;"></div>
                                 {% else %}
-                                    <img src="/pfp/{{ pfpName }}" alt="Your profile picture."
-                                         style="border-radius:10px;max-width:100%;">
+                                    <img src="/pfp/{{ pfpNameOther }}" alt="Your profile picture."
+                                         style="max-width:100%;">
                                 {% endif %}
-                                <a class="btn btn-primary" href="{{ path('app_pfp_change') }}">Change your profile
-                                    picture</a>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-8">
                     <div>
-                        <h1>Hello {{ username }}.</h1>
+                        <h1>{{ username }}.</h1>
                         <br>
-                        {% if is_granted('IS_AUTHENTICATED_FULLY') %}
-                            <h2>Your current email is {{ app.user.email }}</h2>
-                        {% endif %}
                     </div>
-                </div>
-                <div class="row">
-                    <a class="btn btn-secondary" href="{{ path('app_prof_deconnect') }}"
-                       style="width:150px;margin-top:25px;margin-left:10px;">Sign Out</a>
                 </div>
                 {% if is_granted('IS_AUTHENTICATED_FULLY') %}
                     <div class="row" style="margin-top:30px;">
                         <div class="col-md-12 p-3"
                              style="background-color:#222f36;border:solid 5px #17242c;border-radius:50px;margin-bottom:30px;">
-                            <h3 style="text-align:center;">My videos</h3>
+                            <h3 style="text-align:center;">{{ username }}'s videos</h3>
                             <div class="row">
                                 {% for video in pager %}
-                                    <div class="col col-md-4">
-                                        <div class="p-3 text-center"
-                                             style="background-color:#17242c;border-radius:25px;margin-bottom:20px;">
-                                            <a href="{{ path('app_video_show', {slug: video.slug}) }}">
-                                                <img src="/vid/thumbnail/{{ video.getThumbnail() }}"
-                                                     alt="video album cover"
-                                                     style="background-color:black;width:360px;height:192px;object-fit:scale-down;">
-                                                <p class="mt-2"><strong>{{ video.nom }}</strong></p>
-                                                <span style="text-transform:capitalize;">{{ video.genre }}</span>
-                                                <br>
-                                                <span>{{ video.createdAt|ago }}</span>
-                                            </a>
+                                    {% if video.user.id == userid %}
+                                        <div class="col col-md-4">
+                                            <div class="p-3 text-center"
+                                                 style="background-color:#17242c;border-radius:25px;margin-bottom:20px;">
+                                                <a href="{{ path('app_video_show', {slug: video.slug}) }}">
+                                                    <img src="/vid/thumbnail/{{ video.getThumbnail() }}"
+                                                         alt="video album cover"
+                                                         style="background-color:black;width:360px;height:192px;object-fit:scale-down;">
+                                                    <p class="mt-2"><strong>{{ video.nom }}</strong></p>
+                                                    <span style="text-transform:capitalize;">{{ video.genre }}</span>
+                                                    <br>
+                                                    <span>{{ video.createdAt|ago }}</span>
+                                                </a>
+                                            </div>
                                         </div>
-                                    </div>
+                                    {% endif %}
                                 {% endfor %}
                             </div>
-                            <h5>More of my videos : <a href="{{ path('app_browse', {slug: userid}) }}">My videos</a>
-                            </h5>
+                            <h5>More of my videos : <a href="{{ path('app_browse', {slug: userid}) }}">More
+                                    of {{ username }}'s videos</a></h5>
                         </div>
                         <div class="col-md-12 p-3"
                              style="background-color:#222f36;border:solid 5px #17242c;border-radius:50px;">
-                            <h3 style="text-align:center;">My comments</h3>
+                            <h3 style="text-align:center;">{{ username }}'s comments</h3>
                             {% for comment in pagercomment %}
                                 <div class="row"
-                                     style="margin-bottom:25px;background-color:#17242c;border-radius:25px;">
-                                    <div class="col col-md-1" style="text-align:center;margin-top:10px;">
-                                        <a href="/profile">
-                                            {% if app.user.pfpName == '' %}
+                                     style="margin: 0px 10px 25px;background-color:#17242c;border-radius:25px;">
+                                    <div class="col col-md-1" style="text-align:center;">
+                                        <a href="/profile/{{ comment.user.id }}">
+                                            {% if comment.user.pfpName == '' %}
                                                 <i class="fas fa-user-astronaut p-2"
                                                    style="color:grey;border: solid 2px grey; border-radius: 50px; font-size: 50px;"></i>
                                             {% else %}
-                                                <img src="/pfp/{{ app.user.pfpName }}"
+                                                <img src="/pfp/{{ comment.user.pfpName }}"
                                                      style="width:70px;height:70px;border-radius:50%;object-fit:cover;">
                                             {% endif %}
+                                            <br>
+                                            <strong>{{ comment.user.username }}</strong>
                                         </a>
                                     </div>
                                     <div class="col col-md-11">
                                         <div>
-                                            <a href="/profile"><strong>{{ comment.user.username }}</strong></a>
+                                            <a href="/profile/{{ comment.user.pfpName }}"><strong>{{ comment.user.username }}</strong></a>
                                             <p class="mt-2">
                                                 <strong>{{ comment.contentComment }}</strong><br><span>{{ comment.createdAt|ago }}</span>
                                             </p>
@@ -103,105 +204,8 @@
                         </div>
                     </div>
                 {% endif %}
-            </div>
-
-
-
-        {% else %}
-            <div class="row">
-            <div class="col-md-4">
-                {% if pfpNameOther == "" %}
-                    <div type="button" class="fas fa-user-astronaut p-5 zonehoverprofile"
-                         style="border: solid 3px #fff; border-radius: 100px; font-size: 300px;" data-bs-toggle="modal"
-                         data-bs-target="#popup"></div>
-                {% else %}
-                    <div type="button" class="zonehoverprofile" style="border-radius: 50px;" data-bs-toggle="modal"
-                         data-bs-target="#popup">
-                        <img src="/pfp/{{ pfpNameOther }}" alt="Your profile picture."
-                             style="border-radius:50px;max-width:416px;">
-                    </div>
-                {% endif %}
-                <div id="popup" class="modal">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content"
-                             style="background-color:#17242C;border:solid 5px #fff;border-radius: 10px;text-align:center;">
-                            {% if pfpNameOther == '' %}
-                                <div class="fas fa-user-astronaut p-5" style="font-size: 300px;"></div>
-                            {% else %}
-                                <img src="/pfp/{{ pfpNameOther }}" alt="Your profile picture." style="max-width:100%;">
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-8">
-                <div>
-                    <h1>{{ username }}.</h1>
-                    <br>
-                </div>
-            </div>
-            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
-                <div class="row" style="margin-top:30px;">
-                    <div class="col-md-12 p-3"
-                         style="background-color:#222f36;border:solid 5px #17242c;border-radius:50px;margin-bottom:30px;">
-                        <h3 style="text-align:center;">{{ username }}'s videos</h3>
-                        <div class="row">
-                            {% for video in pager %}
-                                {% if video.user.id == userid %}
-                                    <div class="col col-md-4">
-                                        <div class="p-3 text-center"
-                                             style="background-color:#17242c;border-radius:25px;margin-bottom:20px;">
-                                            <a href="{{ path('app_video_show', {slug: video.slug}) }}">
-                                                <img src="/vid/thumbnail/{{ video.getThumbnail() }}"
-                                                     alt="video album cover"
-                                                     style="background-color:black;width:360px;height:192px;object-fit:scale-down;">
-                                                <p class="mt-2"><strong>{{ video.nom }}</strong></p>
-                                                <span style="text-transform:capitalize;">{{ video.genre }}</span>
-                                                <br>
-                                                <span>{{ video.createdAt|ago }}</span>
-                                            </a>
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                        <h5>More of my videos : <a href="{{ path('app_browse', {slug: userid}) }}">More
-                                of {{ username }}'s videos</a></h5>
-                    </div>
-                    <div class="col-md-12 p-3"
-                         style="background-color:#222f36;border:solid 5px #17242c;border-radius:50px;">
-                        <h3 style="text-align:center;">{{ username }}'s comments</h3>
-                        {% for comment in pagercomment %}
-                            <div class="row" style="margin-bottom:25px;background-color:#17242c;border-radius:25px;">
-                                <div class="col col-md-1" style="text-align:center;">
-                                    <a href="/profile/{{ comment.user.id }}">
-                                        {% if comment.user.pfpName == '' %}
-                                            <i class="fas fa-user-astronaut p-2"
-                                               style="color:grey;border: solid 2px grey; border-radius: 50px; font-size: 50px;"></i>
-                                        {% else %}
-                                            <img src="/pfp/{{ comment.user.pfpName }}"
-                                                 style="width:70px;height:70px;border-radius:50%;object-fit:cover;">
-                                        {% endif %}
-                                        <br>
-                                        <strong>{{ comment.user.username }}</strong>
-                                    </a>
-                                </div>
-                                <div class="col col-md-11">
-                                    <div>
-                                        <a href="/profile/{{ comment.user.pfpName }}"><strong>{{ comment.user.username }}</strong></a>
-                                        <p class="mt-2">
-                                            <strong>{{ comment.contentComment }}</strong><br><span>{{ comment.createdAt|ago }}</span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                        {{ pagerfanta(pagercomment) }}
-                    </div>
-                </div>
             {% endif %}
+            </div>
         {% endif %}
-        </div>
-    {% endif %}
-</div>
+    </div>
 {% endblock %}

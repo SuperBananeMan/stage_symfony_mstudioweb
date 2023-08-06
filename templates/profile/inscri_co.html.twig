@@ -27,9 +27,15 @@
 
 						<button class="btn-primary btn" type="submit">Login</button>
 					</form>
+					<hr>
+					<h3>Or...</h3>
+					<a class="btn btn-secondary btn-lg" href="{{ path("app_prof_sign") }}">Sign up</a>
 				{% elseif etat == 'inscription' %}
-					<h2>S'inscrire</h2>
+					<h2>Sign up</h2>
 					{{ form(form) }}
+					<hr>
+					<h3>Or...</h3>
+					<a class="btn btn-secondary btn-lg" href="{{ path("app_prof_connect") }}">Sign up</a>
 				{%endif %}
 			</div>
 		</div>
