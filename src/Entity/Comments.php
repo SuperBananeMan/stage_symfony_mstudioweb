@@ -22,38 +22,25 @@ class Comments
     #[ORM\Column()]
     private ?int $id = null;
 	
-	#[ORM\Column(length: 255)]
-    private ?string $userName = null;
-	
     #[ORM\Column(length: 255)]
     private ?string $content = null;
-	
-	#[ORM\Column(length: 255)]
-    private ?int $uploader = null;
-	
-	#[ORM\Column(length: 255)]
-    private ?int $video = null;
+
+    #[ORM\ManyToOne(inversedBy: 'comments')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $user = null;
+
+    #[ORM\ManyToOne(inversedBy: 'comments')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Videos $video = null;
 	
 	public function __construct()
-    {
-        $this->createdAt = new \DateTimeImmutable();
-    }
+                      {
+                          $this->createdAt = new \DateTimeImmutable();
+                      }
 	
     public function getIdComment(): ?int
     {
         return $this->id;
-    }
-	
-	public function getUserNameComment(): ?string
-    {
-        return $this->userName;
-    }
-
-    public function setUserNameComment(string $userName): static
-    {
-        $this->userName = $userName;
-
-        return $this;
     }
 	
     public function getContentComment(): ?string
@@ -67,24 +54,28 @@ class Comments
 
         return $this;
     }
-	
-	public function setUploaderComment(?int $uploader): void
+
+    public function getUser(): ?User
     {
-        $this->uploader = $uploader;
+        return $this->user;
     }
 
-    public function getUploaderComment(): ?int
+    public function setUser(?User $user): static
     {
-        return $this->uploader;
-    }
-	
-	public function setVideoComment(?int $video): void
-    {
-        $this->video = $video;
+        $this->user = $user;
+
+        return $this;
     }
 
-    public function getVideoComment(): ?int
+    public function getVideo(): ?Videos
     {
         return $this->video;
+    }
+
+    public function setVideo(?Videos $video): static
+    {
+        $this->video = $video;
+
+        return $this;
     }
 }

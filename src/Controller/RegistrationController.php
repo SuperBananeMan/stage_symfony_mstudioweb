@@ -2,34 +2,57 @@
 
 namespace App\Controller;
 
-use App\Form\Type\UserType;
+use App\Form\SearchType;
+use App\Repository\UserRepository;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Filesystem\Path;
+
 use App\Entity\User;
+use App\Entity\Videos;
+use App\Form\UserType;
+use App\Repository\CommentsRepository;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
+use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
 use Vich\UploaderBundle\Form\Type\VichFileType;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Acme\AccountBundle\Form\Type\RegistrationType;
-use Acme\AccountBundle\Form\Model\Registration;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\ResetType;
+use Symfony\Component\Form\Extension\Core\Type\ButtonType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Pagerfanta;
+use function Symfony\Component\String\u;
+use App\Repository\VideosRepository;
 
 class RegistrationController extends AbstractController
 {
     #[Route('/register', name: 'app_prof_sign')]
-	public function new(SessionInterface $session, Request $request, EntityManagerInterface $entityManager, /*UserPasswordHasherInterface $passwordHasher*/): Response
+	public function new(MailerInterface $mailer, VerifyEmailHelperInterface $verifyEmailHelper, SessionInterface $session, Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher, AuthenticationUtils $authenticationUtils): Response
     {
+		// get the login error if there is one
+		$error = '';
+
+		// last username entered by the user
+		$lastUsername = $authenticationUtils->getLastUsername();
+		
         // creates a user object and initializes some data for this example
         $user = new User();
 		
 		
-
         $form = $this->createForm(UserType::class, $user);
 		
 		$form->handleRequest($request);
@@ -49,104 +72,220 @@ class RegistrationController extends AbstractController
 			$entityManager->persist($user);
 			$entityManager->flush();
 
+            $signatureComponents = $verifyEmailHelper->generateSignature(
+                'app_verify_email',
+                $user->getId(),
+                $user->getEmail(),
+                ['id' => $user->getId()]
+            );
+
+            $email = (new TemplatedEmail())
+                ->from('damien.lolz.destructor@gmail.com')
+                ->to($user->getEmail())
+                ->subject('Welcome to VideoTube !')
+                ->htmlTemplate('email/welcome.html.twig')
+                ->context([
+                    'user' => $user,
+                    'signatureLink' => $signatureComponents->getSignedUrl(),
+                ]);
+            $mailer->send($email);
+
             return $this->redirectToRoute('app_prof_show', [
-				'image' => "",
 				'user' => $user,
-				'etat' => 'inscrit',
-				'connectee' => true
 			]);
 		}
+		
 		return $this->render('profile/inscri_co.html.twig', [
-			'image' => "",
+			'formSearch' => '',
 			'form' => $form,
-			'etat' => 'inscription',
-			'connectee' => false
+            'etat' => 'inscription',
 		]);
+    }
+
+    #[Route("/verify", name:"app_verify_email")]
+    public function verifyUserEmail(EntityManagerInterface $entityManager, Request $request, VerifyEmailHelperInterface $verifyEmailHelper, UserRepository $userRepository): Response
+    {
+        $user = $userRepository->find($request->query->get('id'));
+        if (!$user) {
+            throw $this->createNotFoundException();
+        }
+
+        try {
+            $verifyEmailHelper->validateEmailConfirmation(
+                $request->getUri(),
+                $user->getId(),
+                $user->getEmail(),
+            );
+        } catch (VerifyEmailExceptionInterface $e) {
+            $this->addFlash('danger', $e->getReason());
+            return $this->redirectToRoute('app_register');
+        }
+
+        $user->setIsVerified(true);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Your account is now verified !');
+        return $this->redirectToRoute('app_prof_show');
     }
 	
 	#[Route('/profile', name: 'app_prof_show')]
-	public function show_prof(SessionInterface $session, Request $request, EntityManagerInterface $entityManager)
+	public function show_prof(SessionInterface $session, CommentsRepository $commentRepository, Request $request, EntityManagerInterface $entityManager, AuthenticationUtils $authenticationUtils, VideosRepository $videoRepository, string $slug = null)
 	{
-		$username = $session->get('username');
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+		
+		$username = $this->getUser();
+		
 		if($username != ''){
 			$connectee = true;
 		}
 		else{
 			$connectee = false;
 		}
-		$email = $session->get('email');
-		$password = $session->get('password');
-		$pfp = $session->get('pfp');
-		$image = $session->get('pfp');
+
+        $queryBuilder = $videoRepository->createOrderedByQueryBuilder(null,$username);
+        $adapter = new QueryAdapter($queryBuilder);
+        $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
+            $adapter,
+            $request->query->get('page', 1),
+            9
+        );
+		
+		$queryBuildercomment = $commentRepository->commentTakerByUser($username->getId());
+        $adaptercomment = new QueryAdapter($queryBuildercomment);
+        $pagerfantacomment = Pagerfanta::createForCurrentPageWithMaxPerPage(
+            $adaptercomment,
+            $request->query->get('page', 1),
+			10
+        );
+
+        $formSearch = $this->createForm(SearchType::class);
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+			]);
+        }
+		
 		return $this->render('profile/profile.html.twig', [
-			'image' => $image,
-			'username' => $username,
-			'email' => $email,
-			'password' => $password,
-			'pfp' => $pfp,
-			'etat' => 'connectee',
-			'connectee' => $connectee
+			'formSearch' => $formSearch,
+			'ogUser' => true,
+			'pager' => $pagerfanta,
+			'pagercomment' => $pagerfantacomment,
+		]);
+	}
+	
+	#[Route('/profile/{id}', name: 'app_prof_show_other')]
+	public function show_prof_other(SessionInterface $session, CommentsRepository $commentRepository, Request $request, EntityManagerInterface $entityManager, AuthenticationUtils $authenticationUtils, VideosRepository $videoRepository, string $id = null, string $slug = null)
+	{
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+		
+		$username = $this->getUser();
+		
+		if($id == $username->getId()){
+			return $this->redirectToRoute('app_prof_show');
+		}
+		
+		$utilisateur = $entityManager->getRepository(User::class)->find($id);
+		
+		$genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
+        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($slug, $utilisateur);
+        $adapter = new QueryAdapter($queryBuilder);
+        $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
+            $adapter,
+            $request->query->get('', 1),
+            9
+        );
+		
+		$queryBuildercomment = $commentRepository->commentTakerByUser($utilisateur->getId());
+        $adaptercomment = new QueryAdapter($queryBuildercomment);
+        $pagerfantacomment = Pagerfanta::createForCurrentPageWithMaxPerPage(
+            $adaptercomment,
+            $request->query->get('page', 1),
+			10
+        );
+
+        $formSearch = $this->createForm(SearchType::class);
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+			]);
+        }
+		
+		return $this->render('profile/profile.html.twig', [
+			'formSearch' => $formSearch,
+			'ogUser' => false,
+			'userid' => $utilisateur->getId(),
+			'username' => $utilisateur->getUsername(),
+			'pfpNameOther' => $utilisateur->getPfpName(),
+			'pager' => $pagerfanta,
+			'pagercomment' => $pagerfantacomment,
 		]);
 	}
 	
 	#[Route('/pfpchange', name: 'app_pfp_change')]
-	public function show_prof_prof(SessionInterface $session, Request $request, EntityManagerInterface $entityManager)
+	public function show_prof_prof(SessionInterface $session, Request $request, EntityManagerInterface $entityManager, AuthenticationUtils $authenticationUtils, Filesystem $filesystem)
 	{
-		$lid = $session->get('id')[0];
-		$user = $entityManager->getRepository(User::class)->find($lid);
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+		
+		$username = $this->getUser();
+
+        $formSearch = $this->createForm(SearchType::class);
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'formSearch' => $formSearch,
+			]);
+        }
+		
+		$saveOlfPfp = $username->getPfpName();
+		
+		$user = $entityManager->getRepository(User::class)->find($username);
 
 		$formpfp = $this->createFormBuilder($user)
 			->add('pfp', VichFileType::class, ['label' => ' ','attr' => ['onchange' => 'loadFile(event)']])
 			->add('save', SubmitType::class, ['label' => 'Save and Add'])
+			->add('reset', ResetType::class, ['label' => 'Delete File','attr' => ['class' => 'btn btn-secondary']])
 			->getForm();
 		
 		$formpfp->handleRequest($request);
 		
 		if ($formpfp->isSubmitted() && $formpfp->isValid()) {
 			$user->setPfpName($user->getPfp()->getClientOriginalName());
-
+			
 			$entityManager->flush();
 			
-			$session->set('pfp',$user->getPfpName());
+			$newpfpName = $user->getPfpName();
 			
-			$username = $session->get('username');
-			$email = $session->get('email');
-			$password = $session->get('password');
-			$pfp = $session->get('pfp');
-			$image = $session->get('pfp');
+			$file = $user->getPfp();
+			
+			$user->setPfp(null);
+			
+			$filesystem->remove("C:/Users/damie/mixed_vinyl/public/pfp/{$saveOlfPfp}");
+			
 			return $this->redirectToRoute('app_prof_show', [
-				'image' => $image,
+				'file' => $file,
 				'formpfp' => $formpfp,
-				'username' => $username,
-				'email' => $email,
-				'password' => $password,
-				'pfp' => $pfp,
-				'etat' => 'inscrit',
-				'connectee' => true
 			]);
 		}
 		
-		$session->set('pfp',$user->getPfpName());
-		
-		$username = $session->get('username');
-		$email = $session->get('email');
-		$password = $session->get('password');
-		$pfp = $session->get('pfp');
-		$image = $session->get('pfp');
 		return $this->render('profile/pfpchange.html.twig', [
-			'image' => $image,
+			'formSearch' => $formSearch,
 			'formpfp' => $formpfp,
-			'username' => $username,
-			'email' => $email,
-			'password' => $password,
-			'pfp' => $pfp,
-			'etat' => 'connectee',
-			'connectee' => true
 		]);
-	}
-	
-	#[Route('/other', name: 'app_prof_other')]
-	public function show_prof_other(){
-		return null;
 	}
 }

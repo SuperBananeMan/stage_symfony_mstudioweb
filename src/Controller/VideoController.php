@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Form\SearchType;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use App\Repository\UserRepository;
 use App\Repository\CommentsRepository;
@@ -31,6 +32,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Repository\VideosRepository;
 
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+
 class VideoController extends AbstractController
 {
 	public function __construct(
@@ -38,52 +42,103 @@ class VideoController extends AbstractController
     )
     {}
 	
-	#[Route('/browse/{slug}', name: 'app_browse')]
-    public function browse(SessionInterface $session, VideosRepository $videoRepository, Request $request, string $slug = null): Response
+	#[Route('/browse/{genre?}', name: 'app_browse')]
+	public function browse(SessionInterface $session, VideosRepository $videoRepository, Request $request, User $username = null, string $genre = null, AuthenticationUtils $authenticationUtils): Response
     {
-        $genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
-        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($session, $slug);
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        //$genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
+        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($genre, $username);
         $adapter = new QueryAdapter($queryBuilder);
         $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
             $adapter,
             $request->query->get('page', 1),
             9
         );
-		
-		if(gettype($genre) == 'int'){
-			$me = true;
-		}
-		else{
-			$me = false;
-		}
-		
-		$image = $session->get('pfp');
+
+        $formSearch = $this->createForm(SearchType::class);
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+			]);
+        }
+
 		
         return $this->render('vinyl/browse.html.twig', [
-			'image' => $image,
-			'me' => $me,
-			'minestring' => strval($session->get('id')[0]['id']),
-			'mine' => $session->get('id')[0]['id'],
+            'formSearch' => $formSearch,
 			'genre' => $genre,
             'pager' => $pagerfanta,
         ]);
     }
+
+    #[Route('/myvideos/{genre?}', name: 'app_browse_myvideos')]
+    public function myVideos(Request $request, VideosRepository $videoRepository, string $genre = null): Response
+    {
+        $formSearch = $this->createForm(SearchType::class);
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+            return $this->redirectToRoute('app_search', [
+                'dataSearch' => $data,
+                'formSearch' => $formSearch,
+            ]);
+        }
+
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $username = $this->getUser();
+
+        $queryBuilder = $videoRepository->createOrderedByQueryBuilder($genre, $username);
+        $adapter = new QueryAdapter($queryBuilder);
+        $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
+            $adapter,
+            $request->query->get('page', 1),
+            9
+        );
+
+        return $this->render('vinyl/browsemyvideos.html.twig', [
+            'genre' => $genre,
+            'pager' => $pagerfanta,
+            'formSearch' => $formSearch,
+        ]);
+    }
 	
 	#[Route('/video/newform', name: 'app_video_new_form')]
-	public function new(Request $request, EntityManagerInterface $entityManager, SessionInterface $session, UserRepository $repository): Response
+	public function new(Request $request, EntityManagerInterface $entityManager, SessionInterface $session, UserRepository $repository, AuthenticationUtils $authenticationUtils): Response
 	{
-		$video = new Videos();
-		$video->setNom('');
-		$video->setTitle('');
-		$video->setDescription('');
-		$video->setGenre('');
-		$video->setVideoFile();
-		$video->setVideoName('');
-		$video->setVideoSize(0);
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 		
-		$up = $session->get('username');
-		$up = $repository->findOneBy(['username' => $up]);
-		$video->setUploader($up->getId());
+		$username = $this->getUser();
+
+        if($username->isIsVerified() == false){
+            $this->addFlash('danger', 'Please verify your account via the link sent to your email.');
+            return $this->redirectToRoute('app_prof_show');
+        }
+
+        $formSearch = $this->createForm(SearchType::class);
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+			]);
+        }
+		
+		$video = new Videos();
+        $video->setUser($username);
 
         $form = $this->createForm(VideoType::class, $video);
 		
@@ -100,45 +155,69 @@ class VideoController extends AbstractController
 			$entityManager->persist($video);
 			$entityManager->flush();
 			
-			$image = $session->get('pfp');
+			
 			
 			return $this->redirectToRoute('app_video_new', [
-				'image' => $image,
 				'video' => $video,
 				'slug' => $video->getSlug(),
 			]);
 		}
 		
-		$image = $session->get('pfp');
-		
 		return $this->render('video/videoaddForm.html.twig', [
-			'image' => $image,
+			'formSearch' => $formSearch,
 			'form2' => $form,
 		]);
 	}
 	
     #[Route('/video/new/{slug}', name: 'app_video_new')]
-    public function newshow(SessionInterface $session, Videos $video): Response
+    public function newshow(Request $request, SessionInterface $session, Videos $video, AuthenticationUtils $authenticationUtils): Response
     {
-		$image = $session->get('pfp');
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+		
+		$username = $this->getUser();
+
+        $formSearch = $this->createForm(SearchType::class);
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+			]);
+        }
+		
 		return $this->render('video/videoadd.html.twig', [
-			'image' => $image,
+			'formSearch' => $formSearch,
 			'video' => $video,
 		]);
     }
 	
 	#[Route('/video/{slug}', name: 'app_video_show')]
-    public function show(Videos $video, SessionInterface $session, CommentsRepository $commentRepository, Request $request, EntityManagerInterface $entityManager, UserRepository $repository): Response
+    public function show(SessionInterface $session, Videos $video, Security $security, CommentsRepository $commentRepository, Request $request, EntityManagerInterface $entityManager, UserRepository $repository, AuthenticationUtils $authenticationUtils): Response
 	{
+		$this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+		
+		$username = $this->getUser();
+
+        $formSearch = $this->createForm(SearchType::class);
+
+        $formSearch->handleRequest($request);
+
+        if ($formSearch->isSubmitted() && $formSearch->isValid()) {
+            // data is an array with "name", "email", and "message" keys
+            $data = $formSearch->getData();
+			return $this->redirectToRoute('app_search', [
+				'dataSearch' => $data,
+				'formSearch' => $formSearch,
+			]);
+        }
+		
 		$comment = new Comments();
-		$comment->setUserNameComment($session->get('username'));
-		$comment->setContentComment('');
-		
-		$up = $session->get('username');
-		$up = $repository->findOneBy(['username' => $up]);
-		$comment->setUploaderComment($up->getId());
-		
-		$comment->setVideoComment($video->getId());
+        $comment->setUser($username);
+        $comment->setVideo($video);
 		
 		$formcom = $this->createForm(CommentType::class, $comment);
 		
@@ -157,35 +236,25 @@ class VideoController extends AbstractController
 			$comment = new Comments();
 			$formcom = $this->createForm(CommentType::class, $comment);
 			
-			$image = $session->get('pfp');
+			
 			
 			return $this->redirectToRoute('app_video_show', [
-				'image' => $image,
 				'slug' => $video->getSlug(),
 				'formcom' => $formcom,
 				'video' => $video,
 			]);
 		}
 		
-        $queryBuilder = $commentRepository->commentTaker($session, $video->getId());
+        $queryBuilder = $commentRepository->commentTaker($video->getId());
         $adapter = new QueryAdapter($queryBuilder);
         $pagerfanta = Pagerfanta::createForCurrentPageWithMaxPerPage(
             $adapter,
             $request->query->get('page', 1),
             10
         );
-		
-		$numbers = array();
-		
-		foreach($pagerfanta as $comms){
-			$numbers[] = $repository->find($comms->getUploaderComment())->getPfpName();
-		}
-		
-		$image = $session->get('pfp');
 
         return $this->render('video/show.html.twig', [
-			'image' => $image,
-			'numbers' => $numbers,
+			'formSearch' => $formSearch,
 			'formcom' => $formcom,
 			'video' => $video,
 			'pager' => $pagerfanta,

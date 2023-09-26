@@ -20,39 +20,58 @@ class CommentsRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-		parent::__construct($registry, Comments::class);
+        parent::__construct($registry, Comments::class);
     }
 
     /**
      * @return VinylMix[] Returns an array of VinylMix objects
      */
-	 
-    public function commentTaker($session, int $video = null)
+
+    public function commentTaker(int $video = null)
     {
         $queryBuilder = $this->addOrderByQueryBuilder();
         if ($video) {
-			$queryBuilder
-				->andWhere('comments.video = :vid')
-				->setParameter('vid', $video)
-				->setMaxResults(10)
-				->getQuery()
-			;
-		}
-		return $queryBuilder;
+            $queryBuilder
+                ->andWhere('comments.video = :vid')
+                ->setParameter('vid', $video)
+                ->setMaxResults(10)
+                ->getQuery();
+        }
+        return $queryBuilder;
     }
-	
-	private function addOrderByQueryBuilder(QueryBuilder $queryBuilder = null): QueryBuilder
+
+    public function commentTakerByUser(int $userId = null)
+    {
+        $queryBuilder = $this->addOrderByQueryBuilder();
+        if ($userId) {
+            $queryBuilder
+                ->andWhere('comments.user = :use')
+                ->setParameter('use', $userId)
+                ->setMaxResults(10)
+                ->getQuery();
+        }
+        return $queryBuilder;
+    }
+
+    public function commentTakerAll(string $search = null)
+    {
+        $queryBuilder = $this->addOrderByQueryBuilder();
+
+        if ($search) {
+            $queryBuilder->andWhere('comments.content LIKE :searchTerm')
+                ->setParameter('searchTerm', '%' . $search . '%')
+                ->join('comments.user', 'u')
+                ->orWhere('u.username = :user')
+                ->setParameter('user', $search);
+        }
+        return $queryBuilder;
+    }
+
+    private function addOrderByQueryBuilder(QueryBuilder $queryBuilder = null): QueryBuilder
     {
         $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('comments');
 
         return $queryBuilder->orderBy('comments.createdAt', 'DESC');
-    }
-	
-	private function addOrderByQueryBuilderpfp(QueryBuilder $queryBuilder = null): QueryBuilder
-    {
-        $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('user');
-
-        return $queryBuilder;
     }
 
 //    /**
