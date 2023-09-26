@@ -8,22 +8,34 @@
 		</div>
 		<div class="col-md-8">
 			<div>
-				{% if etat == 'inscription' %}
-					<h2>S'inscrire</h2>
-					{% if form != 'undefined' %}
-						{{ form(form) }}
-					{% endif %}
-				{% elseif etat == 'connection' %}
+				{% include "_toasts.html.twig" %}
+				{% if etat == 'connection' %}
 					<h2>Se connecter</h2>
-					{% if error == 'erreur' %}
-						<!-- <div style="color:red;">{# {{ error.messageKey|trans(error.messageData, 'security') }} #}</div> -->
-						<div class="alert alert-danger alert-dismissible fade show" role="alert">
-					    <strong>Erreur</strong> : Identifiant ou mot de passe incorrect.
-					    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-					    </div>
-						<!-- add timer & close -->
+					{% if error %}
+						<div>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
 					{% endif %}
-					{{ form(form2) }}
+
+					<form action="{{ path('app_prof_connect') }}" method="post">
+						<label class="form-label required" for="username">Email</label>
+						<input class="form-control" type="email" id="username" name="_username" value="{{ last_username }}" style="margin-bottom:16px;">
+
+						<label class="form-label required" for="password">Password</label>
+						<input class="form-control" type="password" id="password" name="_password" style="margin-bottom:16px;">
+
+						{# If you want to control the URL the user is redirected to on success
+						<input type="hidden" name="_target_path" value="/profile"> #}
+
+						<button class="btn-primary btn" type="submit">Login</button>
+					</form>
+					<hr>
+					<h3>Or...</h3>
+					<a class="btn btn-secondary btn-lg" href="{{ path("app_prof_sign") }}">Sign up</a>
+				{% elseif etat == 'inscription' %}
+					<h2>Sign up</h2>
+					{{ form(form) }}
+					<hr>
+					<h3>Or...</h3>
+					<a class="btn btn-secondary btn-lg" href="{{ path("app_prof_connect") }}">Sign up</a>
 				{%endif %}
 			</div>
 		</div>

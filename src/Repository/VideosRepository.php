@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\User;
 use App\Entity\Videos;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
@@ -22,8 +23,8 @@ class VideosRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Videos::class);
     }
-	
-	public function add(Videos $entity, bool $flush = false): void
+
+    public function add(Videos $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);
 
@@ -31,8 +32,8 @@ class VideosRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
-	
-	    public function remove(Videos $entity, bool $flush = false): void
+
+    public function remove(Videos $entity, bool $flush = false): void
     {
         $this->getEntityManager()->remove($entity);
 
@@ -41,31 +42,40 @@ class VideosRepository extends ServiceEntityRepository
         }
     }
 
-    /**
-     * @return VinylMix[] Returns an array of VinylMix objects
-     */
-	 
-    public function createOrderedByQueryBuilder($session, string $genre = null, int $video = null)
+    public function createOrderedByQueryBuilder(string $genre = null, User $user = null)
     {
         $queryBuilder = $this->addOrderByQueryBuilder();
         if ($genre) {
-			if ($genre == strval($session->get('id')[0]['id'])){
-				$queryBuilder->andWhere('mix.uploader = :genre')
-					->setParameter('genre', $genre);
-			}
-			else{
-				$queryBuilder->andWhere('mix.genre = :genre')
-					->setParameter('genre', $genre);
-			}
-		}
-		return $queryBuilder;
+            $queryBuilder->andWhere('videos.genre = :genre')
+                ->setParameter('genre', $genre);
+        }
+        if ($user) {
+            $queryBuilder->andWhere('videos.user = :user')
+                ->setParameter('user', $user);
+        }
+        return $queryBuilder;
     }
-	
-	private function addOrderByQueryBuilder(QueryBuilder $queryBuilder = null): QueryBuilder
-    {
-        $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('mix');
 
-        return $queryBuilder->orderBy('mix.createdAt', 'DESC');
+    public function videoTakerAll(string $search = null)
+    {
+        $queryBuilder = $this->addOrderByQueryBuilder();
+
+        if ($search) {
+            $queryBuilder->orWhere('videos.nom LIKE :searchTerm')
+                ->orWhere('videos.description LIKE :searchTerm')
+                ->join('videos.user', 'u')
+                ->orWhere('u.username = :user')
+                ->setParameter('searchTerm', '%' . $search . '%')
+                ->setParameter('user',$search);
+        }
+        return $queryBuilder;
+    }
+
+    private function addOrderByQueryBuilder(QueryBuilder $queryBuilder = null): QueryBuilder
+    {
+        $queryBuilder = $queryBuilder ?? $this->createQueryBuilder('videos');
+
+        return $queryBuilder->orderBy('videos.createdAt', 'DESC');
     }
 
 //    /**

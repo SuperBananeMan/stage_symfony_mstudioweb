@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin forum | VideoTube{% endblock %}
+
+{% block body %}
+<style>
+.lienTot{
+	display:block;
+	text-decoration:none;
+}
+
+.i-red{
+	color:red;
+}
+.i-green{
+	color:green;
+}
+.i-yellow{
+	color:orange;
+}
+</style>
+<div class="container">
+	<div class="row">
+		{% if slug == '' %}
+			<h1>Congratulation, you are in a secret page !</h1>
+		{% else %}
+		{% endif %}
+	</div>
+</div>
+{% endblock %}
